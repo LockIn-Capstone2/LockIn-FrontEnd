@@ -15,7 +15,7 @@ import Link from "next/link";
 
 export default function Signup() {
   return (
-    <div className="flex items-center justify-center min-h-screen">
+    <div className="bg-[url('/Shapes.png')] bg-cover bg-center bg-no-repeat min-h-screen flex items-center justify-center bg-white">
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle>Create an Account</CardTitle>
