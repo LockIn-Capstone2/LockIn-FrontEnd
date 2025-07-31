@@ -26,7 +26,7 @@ function LogIn() {
             </CardDescription>
             <CardAction>
               <Button variant="link">
-                <Link href="/signup">Sign Up</Link>
+                <Link href="/SignUp">Sign Up</Link>
               </Button>
             </CardAction>
           </CardHeader>
