@@ -10,6 +10,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import ThemeToggle from "./ThemeToggle";
 
 // Navigation links array to be used in both desktop and mobile menus
 const navigationLinks = [
@@ -109,6 +110,7 @@ export default function NavBarComponent() {
           <Button asChild size="sm" className="text-sm">
             <a href="/SignUp">Get Started</a>
           </Button>
+          <ThemeToggle />
         </div>
       </div>
     </header>
