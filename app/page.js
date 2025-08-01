@@ -8,6 +8,8 @@ import { useGSAP } from "@gsap/react";
 
 import { SplitText } from "gsap/SplitText";
 // import { TextPlugin } from "gsap/TextPlugin";
+import { VelocityScroll } from "@/components/ui/scrollbasedvelocity";
+import Team2 from "@/components/mvpblocks/team-2";
 
 gsap.registerPlugin(SplitText);
 
@@ -137,6 +139,12 @@ export default function Home() {
               </span>
             </div>
           </div>
+          <VelocityScroll
+            text="Stay Focused · Stay Ahead · Unlock Your Potential · Track. Learn. Excel. · Your Academic Journey Starts Here · Lock In Now!"
+            default_velocity={4}
+            className="split-char text-4xl font-bold uppercase"
+          />
+          <Team2 />
         </div>
       </div>
     </section>
