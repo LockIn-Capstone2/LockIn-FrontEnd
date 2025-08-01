@@ -112,6 +112,10 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+.split-char {
+  @apply bg-gradient-to-tr from-[#3c5899]  to-[#A3ABBA] bg-clip-text text-transparent;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

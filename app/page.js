@@ -13,28 +13,79 @@ gsap.registerPlugin(SplitText);
 
 export default function Home() {
   useGSAP(() => {
-    const split = new SplitText("#split", { type: "chars" });
-    const chars = split.chars;
+    const title1 = new SplitText("#split-title-1", { type: "chars" });
+    const title2 = new SplitText("#split-title-2", { type: "chars" });
+    const title3 = new SplitText("#split-title-3", { type: "chars" });
+    const title4 = new SplitText("#split-title-4", { type: "chars" });
+    const description = new SplitText("#split-description", {
+      type: "chars",
+      charsClass: "split-char",
+    });
 
     gsap.fromTo(
-      chars,
+      title1.chars,
+      { y: 40, opacity: 0, rotateX: -90 },
       {
-        x: -30,
-        opacity: 0,
-        rotate: -5,
-      },
+        y: 0,
+        opacity: 1,
+        rotateX: 0,
+        ease: "back.out(1.7)",
+        duration: 0.6,
+        stagger: { each: 0.04, from: "start" },
+      }
+    );
+
+    gsap.fromTo(
+      title2.chars,
+      { x: -20, opacity: 0, rotateY: 90 },
       {
         x: 0,
         opacity: 1,
-        rotate: 0,
+        rotateY: 0,
         ease: "power3.out",
-        duration: 0.4,
-        transformOrigin: "center center",
-        delay: 0.1,
-        stagger: {
-          each: 0.05,
-          from: "start",
-        },
+        duration: 0.5,
+        delay: 0.3,
+        stagger: { each: 0.05, from: "start" },
+      }
+    );
+
+    gsap.fromTo(
+      title3.chars,
+      { x: 20, opacity: 0, rotateY: -90 },
+      {
+        x: 0,
+        opacity: 1,
+        rotateY: 0,
+        ease: "power3.out",
+        duration: 0.5,
+        delay: 0.6,
+        stagger: { each: 0.05, from: "start" },
+      }
+    );
+
+    gsap.fromTo(
+      title4.chars,
+      { scale: 0.8, opacity: 0 },
+      {
+        scale: 1,
+        opacity: 1,
+        ease: "power2.out",
+        duration: 0.6,
+        delay: 0.9,
+        stagger: { each: 0.04, from: "start" },
+      }
+    );
+
+    gsap.fromTo(
+      description.chars,
+      { y: 20, opacity: 0 },
+      {
+        y: 0,
+        opacity: 1,
+        ease: "power2.out",
+        duration: 0.6,
+        delay: 1.2,
+        stagger: { each: 0.02 },
       }
     );
   }, []);
@@ -43,38 +94,51 @@ export default function Home() {
     <section id="hero" className="px-4 md-px-6">
       <NavBarComponent />
       <div className="min-h-screen bg-[url('/Shapes.png')] bg-cover bg-center bg-no-repeat">
-        <div className="mx-auto w-full max-w-7xl">
-          <div className="grid min-h-[65vh] grid-cols-1 items-center md:grid-cols-2">
-            <div className="bg-[url('/hero.png')] bg-no-repeat relative z-10 row-span-1 row-start-1 -my-10 aspect-[1/1.3] overflow-hidden md:col-span-1 md:col-start-2 md:mt-0"></div>
+        <div className="mx-auto w-full max-w-7xl px-4 md:px-6">
+          <div className="grid min-h-[65vh] grid-cols-1 gap-8 items-center md:grid-cols-2">
+            {/* Right-side image (on desktop) */}
+            <div className="order-1 md:order-2 aspect-[1/1.3] bg-[url('/hero.png')] bg-no-repeat bg-contain bg-center relative z-10 w-full h-full" />
 
-            <div className="col-start-1 md:row-start-1">
-              <h1 className="mb-2 md:mb-8 text-[clamp(3rem,20vmin,4rem)] font-bold leading-tight ">
-                <span id="split" className="block uppercase font-[poppins]">
-                  Welcome to Lock In!, All Inclusive
+            {/* Left-side text (on desktop) */}
+            <div className="order-2 md:order-1">
+              <h1 className="mb-4 md:mb-8 text-[clamp(2rem,8vw,4rem)] font-bold leading-tight">
+                <span
+                  id="split-title-1"
+                  className="block uppercase font-[poppins]"
+                >
+                  Welcome to
                 </span>
-                <span id="split" className="block  uppercase font-[poppins]">
+                <span
+                  id="split-title-2"
+                  className="block uppercase font-[poppins]"
+                >
+                  Lock In!
+                </span>
+                <span
+                  id="split-title-3"
+                  className="block uppercase font-[poppins]"
+                >
+                  all Inclusive
+                </span>
+                <span
+                  id="split-title-4"
+                  className="block uppercase font-[poppins]"
+                >
                   Student App.
                 </span>
               </h1>
+
+              <span
+                id="split-description"
+                className="block uppercase font-[poppins] text-sm md:text-xl font-bold tracking-wide"
+              >
+                A Platform that helps students around the world on track with
+                their classes and grades, to maintain a high GPA
+              </span>
             </div>
           </div>
         </div>
       </div>
     </section>
   );
-}
-
-{
-  /* Your page content goes here */
-}
-{
-  /* <div className="p-8 text-white">
-  <h1 className="text-4xl font-bold">
-  Welcome to LockIn!, all Inclusive Student App.
-  </h1>
-  <p className="mt-4">
-  A Platform that helps students around the world stay on track with
-  there classes and grades, to maintain a high GPA.
-  </p>
-  </div> */
 }
