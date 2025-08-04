@@ -11,12 +11,18 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import React from "react";
-import Link from "next/link";
+import { useState } from "react";
 
 function StudyTimer() {
   const handleClick = () => {
     console.log("clicked");
   };
+
+  const [duration, setDuration] = useState();
+
+  // function convertTimeInput(){
+  //   const hours =
+  // }
 
   return (
     <>
@@ -37,28 +43,22 @@ function StudyTimer() {
             <button
               onClick={handleClick}
               type="submit"
-              className="rounded-lg bg-[#0D1321] text-[white] top-[5] right-[50] font-bold font-[poppins] text-center relative w-[65]"
+              className="rounded-lg bg-[#0D1321] text-[white] top-[5] right-[50] font-bold font-[poppins] text-center relative w-[65] hover:bg-green-500 transition-colors duration-300"
             >
               START
             </button>
             <button
               onClick={handleClick}
               type="submit"
-              className="rounded-lg bg-[#0D1321] text-[white] bottom-[27] left-[50] font-bold font-[poppins] text-center relative w-[65]"
+              className="rounded-lg bg-[#0D1321] text-[white] bottom-[27] left-[50] font-bold font-[poppins] text-center relative w-[65] hover:bg-red-500 transition-colors duration 300"
             >
               STOP
             </button>
             <div className="flex wrap space-x-5">
               <Input
                 type="number"
-                placeholder="Hours"
-                className={"w-25 "}
-              ></Input>
-              <span className="text-white font-[poppins]">:</span>
-              <Input
-                type="number"
-                placeholder="Minutes"
-                className={"w-28"}
+                placeholder="Enter a duration"
+                className={"w-45"}
               ></Input>
             </div>
           </CardFooter>

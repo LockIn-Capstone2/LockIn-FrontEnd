@@ -119,4 +119,9 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield; /* For other browsers */
+  }
 }
