@@ -10,19 +10,47 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import React from "react";
+import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import React from "react";
 
 function StudyTimer() {
   const handleClick = () => {
     console.log("clicked");
   };
 
-  const [duration, setDuration] = useState();
+  const [hours, setHours] = useState("");
+  const [minutes, setMinutes] = useState("");
+  const [seconds, setSeconds] = useState("");
 
-  // function convertTimeInput(){
-  //   const hours =
-  // }
+  const handleHoursChange = (event) => {
+    const newValue = event.target.value;
+    setHours(newValue);
+  };
+
+  const handleMinutesChange = (event) => {
+    const newValue = event.target.value;
+    setMinutes(newValue);
+  };
+
+  const handleSecondsChange = (event) => {
+    const newValue = event.target.value;
+    setSeconds(newValue);
+  };
+
+  const handleSubmit = (event) => {
+    const parsedDuration = parseInt(duration);
+    if (Number.isNaN(parsedDuration)) {
+      alert("Input must be a number");
+    } else {
+      event.preventDefault();
+    }
+  };
+
+  const convertDuration = (duration) => {
+    let hours = Math.floor(duration / 60);
+    let minutes = duration % 60;
+  };
 
   return (
     <>
@@ -50,16 +78,44 @@ function StudyTimer() {
             <button
               onClick={handleClick}
               type="submit"
-              className="rounded-lg bg-[#0D1321] text-[white] bottom-[27] left-[50] font-bold font-[poppins] text-center relative w-[65] hover:bg-red-500 transition-colors duration 300"
+              className="rounded-lg bg-[#0D1321] text-[white] bottom-[27] left-[50] font-bold font-[poppins] text-center relative w-[65] hover:bg-red-500 transition-colors duration-300"
             >
               STOP
             </button>
             <div className="flex wrap space-x-5">
               <Input
                 type="number"
-                placeholder="Enter a duration"
-                className={"w-45"}
+                placeholder="HH"
+                className={"w-13 text-center"}
+                onChange={handleHoursChange}
+                value={hours}
               ></Input>
+              <span className="font-[poppins] text-[white] items-center">
+                :
+              </span>
+              <Input
+                type="number"
+                placeholder="MM"
+                className={"w-14 text-center"}
+                onChange={handleMinutesChange}
+                value={minutes}
+              ></Input>
+              <span className="text-[white]">:</span>
+              <Input
+                type="number"
+                placeholder="SS"
+                className={"w-13 text-center"}
+                onChange={handleSecondsChange}
+                value={seconds}
+              ></Input>
+              <Button
+                onClick={handleSubmit}
+                className={
+                  "hover:bg-[white]/200 transition-colors duration-300 hover:text-[black]/200"
+                }
+              >
+                Submit
+              </Button>
             </div>
           </CardFooter>
         </Card>
