@@ -116,6 +116,16 @@
   @apply bg-gradient-to-tr from-[#3c5899]  to-[#A3ABBA] bg-clip-text text-transparent;
 }
 
+.spin {
+  animation: spin 5s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

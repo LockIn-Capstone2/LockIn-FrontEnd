@@ -9,7 +9,9 @@ import { useGSAP } from "@gsap/react";
 import { SplitText } from "gsap/SplitText";
 // import { TextPlugin } from "gsap/TextPlugin";
 import { VelocityScroll } from "@/components/ui/scrollbasedvelocity";
-import Team2 from "@/components/mvpblocks/team-2";
+import Team2 from "@/components/Team Component/team-2";
+import FooterGlow from "@/components/Footer/footer-glow";
+import AboutUs1 from "@/components/AboutUs/about-us-1";
 
 gsap.registerPlugin(SplitText);
 
@@ -134,8 +136,9 @@ export default function Home() {
                 id="split-description"
                 className="block uppercase font-[poppins] text-sm md:text-xl font-bold tracking-wide"
               >
-                A Platform that helps students around the world on track with
-                their classes and grades, to maintain a high GPA
+                A platform designed to help students worldwide stay on track
+                with their classes and grades, ensuring they maintain a high
+                GPA.
               </span>
             </div>
           </div>
@@ -145,6 +148,8 @@ export default function Home() {
             className="split-char text-4xl font-bold uppercase"
           />
           <Team2 />
+          <AboutUs1 />
+          <FooterGlow />
         </div>
       </div>
     </section>

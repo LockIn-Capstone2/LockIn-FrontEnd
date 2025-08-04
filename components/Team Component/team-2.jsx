@@ -9,7 +9,7 @@ import { GithubIcon, LinkedinIcon, TwitterIcon } from "lucide-react";
 const defaultMembers = [
   {
     name: "Elian Echavarria",
-    role: "CEO & Co-Founder",
+    role: "Full-Stack Developer",
     imageUrl:
       "https://img.freepik.com/premium-psd/3d-avatar-character_975163-690.jpg?ga=GA1.1.1818589012.1736774497&semt=ais_hybrid",
     socialLinks: [
@@ -20,7 +20,7 @@ const defaultMembers = [
   },
   {
     name: "Pedro Ortega",
-    role: "CTO & Co-Founder",
+    role: "Full-Stack Developer",
     imageUrl:
       "https://img.freepik.com/free-psd/3d-rendering-avatar_23-2150833554.jpg?ga=GA1.1.1818589012.1736774497&semt=ais_hybrid",
     socialLinks: [
@@ -31,7 +31,7 @@ const defaultMembers = [
   },
   {
     name: "Charly Rivera",
-    role: "Front-end Developer",
+    role: "Full-Stack Developer",
     imageUrl:
       "https://img.freepik.com/premium-photo/png-headset-headphones-portrait-cartoon_53876-762197.jpg?ga=GA1.1.1818589012.1736774497&semt=ais_hybrid",
     socialLinks: [
@@ -41,7 +41,7 @@ const defaultMembers = [
   },
   {
     name: "Benjamin Ayala",
-    role: "Front-end Developer",
+    role: "Full-Stack Developer",
     imageUrl:
       "https://img.freepik.com/premium-photo/png-cartoon-portrait-glasses-white-background_53876-905385.jpg?ga=GA1.1.1818589012.1736774497&semt=ais_hybrid",
     socialLinks: [
