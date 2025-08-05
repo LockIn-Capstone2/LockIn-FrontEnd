@@ -15,10 +15,6 @@ import { useState, useEffect, useRef } from "react";
 import React from "react";
 
 function StudyTimer() {
-  const handleClick = () => {
-    console.log("clicked");
-  };
-
   const [hours, setHours] = useState("");
   const [minutes, setMinutes] = useState("");
   const [seconds, setSeconds] = useState("");
@@ -53,6 +49,16 @@ function StudyTimer() {
 
     const totalDurationInSeconds =
       totalSeconds + totalSecondsofHours + totalSecondsofMinutes;
+
+    setTimeLeft(totalDurationInSeconds);
+  };
+
+  const formatTime = (totalDurationInSeconds) => {
+    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
+      2,
+      "0"
+    )}:${String(seconds).padStart(2, "0")}`;
+    setIsActive(true);
   };
 
   const handleStart = () => {
@@ -101,13 +107,14 @@ function StudyTimer() {
             <CardTitle className="font-[poppins] text-[white] text-center">
               Study Timer
             </CardTitle>
-            <CardDescription></CardDescription>
+            <CardDescription>{formatTime(timeLeft)}</CardDescription>
             <CardAction></CardAction>
           </CardHeader>
           <CardContent className=" flex w-40 h-40 rounded-full aspect-square items-center justify-center ring-4 mx-auto ring-[#EEC0C8]"></CardContent>
           <CardFooter className="flex-col gap-2">
             <button
               onClick={handleStart}
+              disabled={isActive}
               type="submit"
               className="rounded-lg bg-[#0D1321] text-[white] top-[5] right-[50] font-bold font-[poppins] text-center relative w-[65] hover:bg-green-500 transition-colors duration-300"
             >
