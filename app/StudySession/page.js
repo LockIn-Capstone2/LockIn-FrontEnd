@@ -43,22 +43,23 @@ function StudyTimer() {
   const handleSubmit = (event) => {
     event.preventDefault();
     //this might be messy code
-    const totalSecondsofHours = hours * 3600;
-    const totalSecondsofMinutes = minutes * 60;
-    const totalSeconds = seconds;
+    const hour = (parseInt(hours) || 0) * 3600;
+    const minute = (parseInt(minutes) || 0) * 60;
+    const second = parseInt(seconds) || 0;
 
-    const totalDurationInSeconds =
-      totalSeconds + totalSecondsofHours + totalSecondsofMinutes;
+    const totalDuration = hour + minute + second;
 
-    setTimeLeft(totalDurationInSeconds);
+    setTimeLeft(totalDuration);
   };
 
-  const formatTime = (totalDurationInSeconds) => {
-    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
+  const formatTime = (totalDuration) => {
+    const HH = Math.floor(totalDuration / 3600);
+    const MM = Math.floor((totalDuration % 3600) / 60);
+    const SS = totalDuration % 60;
+    return `${String(HH).padStart(2, "0")}:${String(MM).padStart(
       2,
       "0"
-    )}:${String(seconds).padStart(2, "0")}`;
-    setIsActive(true);
+    )}:${String(SS).padStart(2, "0")}`;
   };
 
   const handleStart = () => {
