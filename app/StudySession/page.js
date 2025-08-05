@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import React from "react";
 
 function StudyTimer() {
@@ -22,6 +22,12 @@ function StudyTimer() {
   const [hours, setHours] = useState("");
   const [minutes, setMinutes] = useState("");
   const [seconds, setSeconds] = useState("");
+
+  //isActive lets us know if the timer is running
+  const [isActive, setIsActive] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(0);
+  const timerRef = useRef(null);
 
   const handleHoursChange = (event) => {
     const newValue = event.target.value;
@@ -39,18 +45,50 @@ function StudyTimer() {
   };
 
   const handleSubmit = (event) => {
-    const parsedDuration = parseInt(duration);
-    if (Number.isNaN(parsedDuration)) {
-      alert("Input must be a number");
-    } else {
-      event.preventDefault();
+    event.preventDefault();
+    //this might be messy code
+    const totalSecondsofHours = hours * 3600;
+    const totalSecondsofMinutes = minutes * 60;
+    const totalSeconds = seconds;
+
+    const totalDurationInSeconds =
+      totalSeconds + totalSecondsofHours + totalSecondsofMinutes;
+  };
+
+  const handleStart = () => {
+    if (timeLeft > 0) {
+      setIsActive(true);
+      setIsPaused(false);
     }
   };
 
-  const convertDuration = (duration) => {
-    let hours = Math.floor(duration / 60);
-    let minutes = duration % 60;
+  const handlePause = () => {
+    if (isActive) {
+      setIsPaused(true);
+      setIsActive(false);
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    }
   };
+
+  useEffect(() => {
+    if (isActive && !isPaused) {
+      timerRef.current = setInterval(() => {
+        setTimeLeft((prevTime) => {
+          if (prevTime <= 1) {
+            clearInterval(timerRef.current);
+          }
+          return prevTime - 1;
+        });
+      }, 1000);
+    }
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, [isActive, isPaused]);
 
   return (
     <>
@@ -69,14 +107,14 @@ function StudyTimer() {
           <CardContent className=" flex w-40 h-40 rounded-full aspect-square items-center justify-center ring-4 mx-auto ring-[#EEC0C8]"></CardContent>
           <CardFooter className="flex-col gap-2">
             <button
-              onClick={handleClick}
+              onClick={handleStart}
               type="submit"
               className="rounded-lg bg-[#0D1321] text-[white] top-[5] right-[50] font-bold font-[poppins] text-center relative w-[65] hover:bg-green-500 transition-colors duration-300"
             >
               START
             </button>
             <button
-              onClick={handleClick}
+              onClick={handlePause}
               type="submit"
               className="rounded-lg bg-[#0D1321] text-[white] bottom-[27] left-[50] font-bold font-[poppins] text-center relative w-[65] hover:bg-red-500 transition-colors duration-300"
             >
