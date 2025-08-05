@@ -120,6 +120,18 @@
   animation: spin 5s linear infinite;
 }
 
+
+
+.error-title {
+  text-shadow: 2px 2px #ff0055, -2px -2px #00ffff;
+  transform-origin: center;
+}
+
+.error-subtitle {
+  letter-spacing: 2px;
+}
+
+
 @keyframes spin {
   to {
     transform: rotate(360deg);
