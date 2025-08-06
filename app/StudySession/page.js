@@ -108,10 +108,14 @@ function StudyTimer() {
             <CardTitle className="font-[poppins] text-[white] text-center">
               Study Timer
             </CardTitle>
-            <CardDescription>{formatTime(timeLeft)}</CardDescription>
+            <CardDescription></CardDescription>
             <CardAction></CardAction>
           </CardHeader>
-          <CardContent className=" flex w-40 h-40 rounded-full aspect-square items-center justify-center ring-4 mx-auto ring-[#EEC0C8]"></CardContent>
+          <CardContent className=" flex w-40 h-40 rounded-full aspect-square items-center justify-center ring-4 mx-auto ring-[#EEC0C8]">
+            <div className="items-center justify-center font-[poppins] text-[white]">
+              {formatTime(timeLeft)}
+            </div>
+          </CardContent>
           <CardFooter className="flex-col gap-2">
             <button
               onClick={handleStart}
