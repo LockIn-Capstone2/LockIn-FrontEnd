@@ -158,14 +158,29 @@ function StudyTimer() {
                 onChange={handleSecondsChange}
                 value={seconds}
               ></Input>
-              <Button
+              <div>
+                {!isActive ? (
+                  <Button
+                    onClick={handleSubmit}
+                    className={
+                      "hover:bg-[white]/200 transition-colors duration-300 hover:text-[black]/200"
+                    }
+                  >
+                    Submit
+                  </Button>
+                ) : (
+                  <> </>
+                )}
+              </div>
+
+              {/* <Button
                 onClick={handleSubmit}
                 className={
                   "hover:bg-[white]/200 transition-colors duration-300 hover:text-[black]/200"
                 }
               >
                 Submit
-              </Button>
+              </Button> */}
             </div>
           </CardFooter>
         </Card>
