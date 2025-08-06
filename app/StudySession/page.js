@@ -161,7 +161,7 @@ function StudyTimer() {
               <Button
                 onClick={handleSubmit}
                 className={
-                  "hover:bg-[white]/200 transition-colors duration-300 hover:text-[black]/200"
+                  "hover:bg-[white]/200 transition-colors duration-300 hover:text-[black]/200 bg-[black] text-[white]"
                 }
               >
                 Submit
