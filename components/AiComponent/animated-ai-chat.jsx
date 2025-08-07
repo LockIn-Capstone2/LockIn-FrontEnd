@@ -16,6 +16,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import * as React from "react";
 import axios from "axios";
+import { Response } from "@/components/ai-elements/response";
 
 function useAutoResizeTextarea({ minHeight, maxHeight }) {
   const textareaRef = useRef(null);
@@ -102,6 +103,21 @@ const Textarea = React.forwardRef(
   }
 );
 Textarea.displayName = "Textarea";
+
+const renderMessage = (message, index) => {
+  const isUser = message.role === "user";
+  return (
+    <div
+      key={index}
+      className={cn(
+        "mb-4 w-full rounded-lg px-4 py-3",
+        isUser ? "bg-primary/10 text-left" : "bg-muted/30 text-left"
+      )}
+    >
+      <div className="text-sm whitespace-pre-line">{message.content}</div>
+    </div>
+  );
+};
 
 export default function AnimatedAIChat() {
   const [value, setValue] = useState("");
@@ -323,32 +339,49 @@ export default function AnimatedAIChat() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
           >
-            <div className="space-y-3 text-center">
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2, duration: 0.5 }}
-                className="inline-block"
-              >
-                <h1 className="pb-1 text-3xl font-medium tracking-tight">
-                  How can I help today?
-                </h1>
+            {messages.length === 0 && !isTyping && (
+              <div className="space-y-3 text-center">
                 <motion.div
-                  className="via-primary/50 h-px bg-gradient-to-r from-transparent to-transparent"
-                  initial={{ width: 0, opacity: 0 }}
-                  animate={{ width: "100%", opacity: 1 }}
-                  transition={{ delay: 0.5, duration: 0.8 }}
-                />
-              </motion.div>
-              <motion.p
-                className="text-muted-foreground text-sm"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-              >
-                Type a command or ask a question
-              </motion.p>
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2, duration: 0.5 }}
+                  className="inline-block"
+                >
+                  <h1 className="pb-1 text-3xl font-medium tracking-tight">
+                    How can I help today?
+                  </h1>
+                  <motion.div
+                    className="via-primary/50 h-px bg-gradient-to-r from-transparent to-transparent"
+                    initial={{ width: 0, opacity: 0 }}
+                    animate={{ width: "100%", opacity: 1 }}
+                    transition={{ delay: 0.5, duration: 0.8 }}
+                  />
+                </motion.div>
+                <motion.p
+                  className="text-muted-foreground text-sm"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  Type a command or ask a question
+                </motion.p>
+              </div>
+            )}
+
+            {/* Messages rendering */}
+            {/* <div className="mt-6">
+              {messages.map((message, index) => renderMessage(message, index))}
+            </div> */}
+            <div className="mt-6 space-y-4">
+              {messages.map((message, index) =>
+                message.role === "assistant" ? (
+                  <Response key={index}>{message.content}</Response>
+                ) : (
+                  renderMessage(message, index)
+                )
+              )}
             </div>
+
             <motion.div
               className="border-border bg-card/80 relative rounded-2xl border shadow-2xl backdrop-blur-2xl"
               initial={{ scale: 0.98 }}
