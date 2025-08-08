@@ -4,7 +4,7 @@ import axios from "axios";
 import React from "react";
 import { LineChart } from "@mui/x-charts";
 import { useParams } from "next/navigation";
-
+import "./style.module.css";
 function ChartData() {
   const [studyData, setStudyData] = useState([]);
   const { userId } = useParams();
@@ -38,7 +38,7 @@ function ChartData() {
   }));
 
   return (
-    <div>
+    <div className="flex h-screen ">
       {studyData.length > 0 ? (
         <LineChart
           dataset={formattedData}
@@ -46,18 +46,22 @@ function ChartData() {
             {
               dataKey: "created_at",
               scaleType: "time",
+              label: "Created At",
               valueFormatter: (date) =>
                 date instanceof Date
                   ? date.toLocaleDateString() + " " + date.toLocaleTimeString()
                   : String(date),
             },
           ]}
+          yAxis={[{ label: "Duration (in minutes)" }]}
           series={[{ dataKey: "duration" }]}
           height={300}
           width={300}
         />
       ) : (
-        <p>loading</p>
+        <div className="flex text-center justify-center align-center font-[poppins] m-auto ">
+          Loading
+        </div>
       )}
     </div>
   );
