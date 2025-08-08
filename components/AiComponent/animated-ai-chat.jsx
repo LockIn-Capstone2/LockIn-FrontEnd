@@ -258,7 +258,7 @@ export default function AnimatedAIChat() {
         return updatedMessages;
       });
 
-      const url = "http://localhost:8080/chat";
+      const url = "http://localhost:8080/api/chat";
       const response = await fetch(url, {
         method: "POST",
         headers: {
