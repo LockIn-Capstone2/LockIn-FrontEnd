@@ -3,16 +3,11 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import React from "react";
 import { LineChart } from "@mui/x-charts";
-import { duration } from "@mui/material";
-// import { useParams } from "next/navigation";
-// import { useRouter } from "next/router";
-function Data() {
+import { useParams } from "next/navigation";
+
+function ChartData() {
   const [studyData, setStudyData] = useState([]);
-
-  // const router = useRouter();
-  // const { id } = router.query;
-
-  const userId = 1;
+  const { userId } = useParams();
 
   const getData = async () => {
     try {
@@ -68,4 +63,4 @@ function Data() {
   );
 }
 
-export default Data;
+export default ChartData;
