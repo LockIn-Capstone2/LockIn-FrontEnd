@@ -4,6 +4,7 @@ import {
   Card,
   CardAction,
   CardContent,
+  CardFooter,
   CardDescription,
   CardHeader,
   CardTitle,
@@ -127,11 +128,7 @@ export default function Signup() {
               </Button>
               {validation ? (
                 <Alert severity="success">Signed up successfully</Alert>
-              ) : (
-                <Alert severity="error">
-                  Error signing up. Email formatting may be incorrect
-                </Alert>
-              )}
+              ) : null}
               <Button variant="outline" className="w-full">
                 Sign Up with Google
               </Button>
