@@ -5,13 +5,14 @@ import {
   CardAction,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import React, { useState, useEffect } from "react";
+import { validate } from "email-validator";
+import { Alert } from "@mui/material";
 import Link from "next/link";
 
 export default function Signup() {
@@ -19,6 +20,7 @@ export default function Signup() {
   const [lastName, setLastName] = useState("");
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
+  const [validation, setValidation] = useState(false);
 
   const handleFirstNameChange = (event) => {
     const newValue = event.target.value;
@@ -42,6 +44,9 @@ export default function Signup() {
 
   const handleSignUp = (event) => {
     event.preventDefault();
+    if (validate(email)) {
+      setValidation(true);
+    }
   };
 
   return (
@@ -120,6 +125,13 @@ export default function Signup() {
               <Button type="submit" className="w-full">
                 Sign Up
               </Button>
+              {validation ? (
+                <Alert severity="success">Signed up successfully</Alert>
+              ) : (
+                <Alert severity="error">
+                  Error signing up. Email formatting may be incorrect
+                </Alert>
+              )}
               <Button variant="outline" className="w-full">
                 Sign Up with Google
               </Button>
