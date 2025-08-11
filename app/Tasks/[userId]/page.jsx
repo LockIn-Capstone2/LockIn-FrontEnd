@@ -72,6 +72,15 @@ const handleEditChange = (e) => {
     }
   };
 
+  const handleStatusChange = async (taskId, newStatus) => {
+  try {
+    await axios.patch(`http://localhost:8080/api/tasks/${userId}/${taskId}`, { status: newStatus });
+    fetchTasks(); // Refresh the list
+  } catch (error) {
+    console.error("Error updating status:", error);
+  }
+};
+
   return (
     <div className="task-container">
       <h1>Your Tasks (User {userId})</h1>
@@ -98,11 +107,14 @@ const handleEditChange = (e) => {
                   <td><input name="assignment" value={editTask.assignment} onChange={handleEditChange} /></td>
                   <td><input name="description" value={editTask.description} onChange={handleEditChange} /></td>
                   <td>
-                    <select name="status" value={editTask.status} onChange={handleEditChange}>
-                      <option value="pending">Pending</option>
-                      <option value="in-progress">In-Progress</option>
-                      <option value="completed">Completed</option>
-                    </select>
+                    <select
+                        value={task.status}
+                        onChange={e => handleStatusChange(task.id, e.target.value)}
+                        >
+                        <option value="pending">Pending</option>
+                        <option value="in-progress">In-Progress</option>
+                        <option value="completed">Completed</option>
+                        </select>
                   </td>
                   <td><input name="deadline" type="date" value={editTask.deadline} onChange={handleEditChange} /></td>
                   <td>
