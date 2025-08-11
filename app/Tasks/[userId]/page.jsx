@@ -7,6 +7,7 @@ export default function TasksPage({ params }) {
   const userId = params.userId;
   const [tasks, setTasks] = useState([]);
   const [showNewRow, setShowNewRow] = useState(false);
+  const [editTask, setEditTask] = useState(null);
   const [newTask, setNewTask] = useState({
     className: "",
     assignment: "",
@@ -56,6 +57,21 @@ export default function TasksPage({ params }) {
     }
   };
 
+const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditTask({ ...editTask, [name]: value });
+  };
+
+  const handleEditTask = async () => {
+    try {
+      await axios.put(`http://localhost:8080/api/tasks/${userId}/${taskId}`, editTask);
+      setEditTask(null);
+      fetchTasks();
+    } catch (error) {
+      console.error("Error editing task:", error);
+    }
+  };
+
   return (
     <div className="task-container">
       <h1>Your Tasks (User {userId})</h1>
@@ -76,17 +92,45 @@ export default function TasksPage({ params }) {
           </thead>
           <tbody>
             {tasks.map((task) => (
-              <tr key={task.id}>
-                <td>{task.className}</td>
-                <td>{task.assignment}</td>
-                <td>{task.description}</td>
-                <td>{task.status}</td>
-                <td>{task.deadline}</td>
-                <td>{task.priority}</td>
-                <td className="task-actions">
-                  <button onClick={() => handleDelete(task.id)}>Delete</button>
-                </td>
-              </tr>
+              editTask && editTask.id === task.id ? (
+                <tr key={task.id}>
+                  <td><input name="className" value={editTask.className} onChange={handleEditChange} /></td>
+                  <td><input name="assignment" value={editTask.assignment} onChange={handleEditChange} /></td>
+                  <td><input name="description" value={editTask.description} onChange={handleEditChange} /></td>
+                  <td>
+                    <select name="status" value={editTask.status} onChange={handleEditChange}>
+                      <option value="pending">Pending</option>
+                      <option value="in-progress">In-Progress</option>
+                      <option value="completed">Completed</option>
+                    </select>
+                  </td>
+                  <td><input name="deadline" type="date" value={editTask.deadline} onChange={handleEditChange} /></td>
+                  <td>
+                    <select name="priority" value={editTask.priority} onChange={handleEditChange}>
+                      <option value="low">Low</option>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                    </select>
+                  </td>
+                  <td className="task-actions">
+                    <button onClick={handleEditTask}>Save</button>
+                    <button onClick={() => setEditTask(null)}>Cancel</button>
+                  </td>
+                </tr>
+              ) : (
+                <tr key={task.id}>
+                  <td>{task.className}</td>
+                  <td>{task.assignment}</td>
+                  <td>{task.description}</td>
+                  <td>{task.status}</td>
+                  <td>{task.deadline}</td>
+                  <td>{task.priority}</td>
+                  <td className="task-actions">
+                    <button onClick={() => setEditTask(task)}>Edit</button>
+                    <button onClick={() => handleDelete(task.id)}>Delete</button>
+                  </td>
+                </tr>
+              )
             ))}
             {showNewRow && (
               <tr>
