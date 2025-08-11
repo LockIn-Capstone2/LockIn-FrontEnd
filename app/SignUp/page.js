@@ -17,8 +17,8 @@ import Link from "next/link";
 export default function Signup() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  // const [password, setPassword] = useState("");
-  // const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
 
   const handleFirstNameChange = (event) => {
     const newValue = event.target.value;
@@ -28,6 +28,20 @@ export default function Signup() {
   const handleLastNameChange = (event) => {
     const newValue = event.target.value;
     setLastName(newValue);
+  };
+
+  const handleEmailChange = (event) => {
+    const newValue = event.target.value;
+    setEmail(newValue);
+  };
+
+  const handlePasswordChange = (event) => {
+    const newValue = event.target.value;
+    setPassword(newValue);
+  };
+
+  const handleSignUp = (event) => {
+    event.preventDefault();
   };
 
   return (
@@ -46,7 +60,7 @@ export default function Signup() {
         </CardHeader>
 
         <CardContent>
-          <form>
+          <form onSubmit={handleSignUp}>
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
                 <Label htmlFor="firstname">First Name</Label>
@@ -79,6 +93,8 @@ export default function Signup() {
                   type="email"
                   placeholder="m@example.com"
                   required
+                  onChange={handleEmailChange}
+                  value={email}
                 />
               </div>
 
@@ -92,20 +108,24 @@ export default function Signup() {
                     Forgot your password?
                   </a> */}
                 </div>
-                <Input id="password" type="password" required />
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Enter a password: "
+                  required
+                  onChange={handlePasswordChange}
+                  value={password}
+                />
               </div>
+              <Button type="submit" className="w-full">
+                Sign Up
+              </Button>
+              <Button variant="outline" className="w-full">
+                Sign Up with Google
+              </Button>
             </div>
           </form>
         </CardContent>
-
-        <CardFooter className="flex-col gap-2">
-          <Button type="submit" className="w-full">
-            Sign Up
-          </Button>
-          <Button variant="outline" className="w-full">
-            Sign Up with Google
-          </Button>
-        </CardFooter>
       </Card>
     </div>
   );
