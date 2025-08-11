@@ -134,26 +134,34 @@ export default function QuizPage() {
   // Error state
   if (error) {
     return (
-      <div style={{ padding: "2rem", textAlign: "center" }}>
+      <div
+        className="p-8 text-center"
+        // style={{ padding: "2rem", textAlign: "center" }}
+      >
         <div
-          style={{ fontSize: "1.5rem", color: "#d32f2f", marginBottom: "1rem" }}
+          // style={{ fontSize: "1.5rem", color: "#d32f2f", marginBottom: "1rem" }}
+          className="text-2xl text-[#d32f2f] mb-4"
         >
           Error Loading Quiz
         </div>
-        <div style={{ fontSize: "1rem", color: "#666", marginBottom: "2rem" }}>
+        <div
+          // style={{ fontSize: "1rem", color: "#666", marginBottom: "2rem" }}
+          className="text-[1rem] text-[#f43030] mb-8"
+        >
           {error}
         </div>
         <button
           onClick={() => window.location.reload()}
-          style={{
-            padding: "0.75rem 1.5rem",
-            fontSize: "1rem",
-            backgroundColor: "#1976d2",
-            color: "white",
-            border: "none",
-            borderRadius: "8px",
-            cursor: "pointer",
-          }}
+          // style={{
+          //   padding: "0.75rem 1.5rem",
+          //   fontSize: "1rem",
+          //   backgroundColor: "#1976d2",
+          //   color: "white",
+          //   border: "none",
+          //   borderRadius: "8px",
+          //   cursor: "pointer",
+          // }}
+          className="px-"
         >
           Try Again
         </button>
