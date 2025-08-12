@@ -5,25 +5,37 @@ import {
   CardAction,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import axios from "axios";
 import React, { useState } from "react";
 import Link from "next/link";
 
-export default function LogIn() {
-  const [email, setEmail] = useState("");
+function LogIn() {
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleEmailChange = (event) => {
-    setEmail(event.target.value);
+  const handleUsernameChange = (event) => {
+    setUsername(event.target.value);
   };
 
   const handlePasswordChange = (event) => {
     setPassword(event.target.value);
+  };
+
+  const handleLogin = async (event) => {
+    event.preventDefault();
+    try {
+      const response = await axios.post(`http://localhost:8080/auth/login`, {
+        username,
+        password,
+      });
+    } catch (error) {
+      console.log("error", error.response);
+    }
   };
 
   return (
@@ -41,17 +53,17 @@ export default function LogIn() {
           </CardAction>
         </CardHeader>
         <CardContent>
-          <form>
+          <form onSubmit={handleLogin}>
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="username">Username</Label>
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="johndoe@example.com"
+                  id="username"
+                  type="text"
+                  placeholder="johndoe123"
                   required
-                  value={email}
-                  onChange={handleEmailChange}
+                  value={username}
+                  onChange={handleUsernameChange}
                 />
               </div>
               <div className="grid gap-2">
@@ -73,18 +85,17 @@ export default function LogIn() {
                   onChange={handlePasswordChange}
                 />
               </div>
+              <Button type="submit" className="w-full">
+                Login
+              </Button>
+              <Button variant="outline" className="w-full">
+                Login with Google
+              </Button>
             </div>
           </form>
         </CardContent>
-        <CardFooter className="flex-col gap-2">
-          <Button type="submit" className="w-full">
-            Login
-          </Button>
-          <Button variant="outline" className="w-full">
-            Login with Google
-          </Button>
-        </CardFooter>
       </Card>
     </div>
   );
 }
+export default LogIn;
