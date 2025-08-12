@@ -3,6 +3,7 @@
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import ThemeToggleButton from "@/components/ui/theme-toggle-button";
 
 export default function QuizPage() {
   const { quizId } = useParams();
@@ -134,22 +135,9 @@ export default function QuizPage() {
   // Error state
   if (error) {
     return (
-      <div
-        className="p-8 text-center"
-        // style={{ padding: "2rem", textAlign: "center" }}
-      >
-        <div
-          // style={{ fontSize: "1.5rem", color: "#d32f2f", marginBottom: "1rem" }}
-          className="text-2xl text-[#d32f2f] mb-4"
-        >
-          Error Loading Quiz
-        </div>
-        <div
-          // style={{ fontSize: "1rem", color: "#666", marginBottom: "2rem" }}
-          className="text-[1rem] text-[#f43030] mb-8"
-        >
-          {error}
-        </div>
+      <div className="p-8 text-center">
+        <div className="text-2xl text-[#d32f2f] mb-4">Error Loading Quiz</div>
+        <div className="text-[1rem] text-[#f43030] mb-8">{error}</div>
         <button
           onClick={() => window.location.reload()}
           // style={{
@@ -248,168 +236,157 @@ export default function QuizPage() {
     const progress = ((currentIndex + 1) / data.length) * 100;
 
     return (
-      <div style={{ padding: "2rem", maxWidth: "800px", margin: "0 auto" }}>
-        {/* Progress bar */}
-        {/* <div
-          style={{
-            width: "100%",
-            height: "8px",
-            backgroundColor: "#e0e0e0",
-            borderRadius: "4px",
-            marginBottom: "2rem",
-            overflow: "hidden",
-          }}
-        >
+      <>
+        <ThemeToggleButton />
+        <div style={{ padding: "2rem", maxWidth: "800px", margin: "0 auto" }}>
+          {/* Progress bar */}
+
+          <div className="flex justify-between mb-1">
+            <span className="text-base font-medium text-blue-700 dark:text-white">
+              Quiz
+            </span>
+            <span className="text-sm font-medium text-blue-700 dark:text-white">
+              {progress}%
+            </span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 mb-8">
+            <div
+              className="bg-blue-600 h-2.5 rounded-full"
+              // style="width: 45%"
+            ></div>
+          </div>
+
+          {/* Question counter */}
           <div
             style={{
-              width: `${progress}%`,
-              height: "100%",
-              backgroundColor: "#1976d2",
-              transition: "width 0.3s ease",
-            }}
-          />
-        </div> */}
-
-        <div className="flex justify-between mb-1">
-          <span className="text-base font-medium text-blue-700 dark:text-white">
-            Quiz
-          </span>
-          <span className="text-sm font-medium text-blue-700 dark:text-white">
-            {progress}%
-          </span>
-        </div>
-        <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
-          <div
-            className="bg-blue-600 h-2.5 rounded-full"
-            // style="width: 45%"
-          ></div>
-        </div>
-
-        {/* Question counter */}
-        <div
-          style={{
-            textAlign: "center",
-            marginBottom: "2rem",
-            color: "#666",
-          }}
-        >
-          Question {currentIndex + 1} of {data.length}
-        </div>
-
-        {/* Question */}
-        <h1
-          style={{
-            fontSize: "1.8rem",
-            marginBottom: "2rem",
-            color: "#333",
-            lineHeight: "1.4",
-          }}
-        >
-          {current.question}
-        </h1>
-
-        {/* Answer options */}
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "1rem",
-            marginBottom: "2rem",
-          }}
-        >
-          {current.options.map((option, index) => {
-            const isSelected = selectedAnswer === option[0];
-            const isCorrect = current.correct === option[0];
-            const showResult = showAnswer;
-
-            let buttonStyle = {
-              padding: "1rem",
-              fontSize: "1rem",
-              cursor: showResult ? "default" : "pointer",
-              borderRadius: "8px",
-              // border: "2px solid #e0e0e0",
-              backgroundColor: "white",
-              transition: "all 0.2s ease",
-              textAlign: "left",
-              color: "black",
-            };
-
-            if (showResult) {
-              if (isSelected && isCorrect) {
-                buttonStyle = {
-                  ...buttonStyle,
-                  backgroundColor: "#4caf50",
-                  color: "white",
-                  borderColor: "#4caf50",
-                };
-              } else if (isSelected && !isCorrect) {
-                buttonStyle = {
-                  ...buttonStyle,
-                  backgroundColor: "#f44336",
-                  color: "white",
-                  borderColor: "#f44336",
-                };
-              } else if (isCorrect) {
-                buttonStyle = {
-                  ...buttonStyle,
-                  backgroundColor: "#4caf50",
-                  color: "white",
-                  borderColor: "#4caf50",
-                };
-              }
-            } else if (isSelected) {
-              buttonStyle = {
-                ...buttonStyle,
-                backgroundColor: "#e3f2fd",
-                borderColor: "#1976d2",
-              };
-            }
-
-            return (
-              <button
-                key={index}
-                style={buttonStyle}
-                onClick={() => !showResult && handleAnswer(option[0])}
-                disabled={showResult}
-              >
-                {option}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Feedback message */}
-        {showAnswer && (
-          <div
-            style={{
-              padding: "1rem",
-              borderRadius: "8px",
               textAlign: "center",
               marginBottom: "2rem",
-              backgroundColor:
-                selectedAnswer === current.correct ? "#e8f5e8" : "#ffebee",
-              color: selectedAnswer === current.correct ? "#2e7d32" : "#c62828",
+              color: "#666",
             }}
           >
-            {selectedAnswer === current.correct
-              ? "✅ Correct!"
-              : "❌ Incorrect. The correct answer is highlighted above."}
+            Question {currentIndex + 1} of {data.length}
           </div>
-        )}
 
-        {/* Navigation */}
-        {showAnswer && (
-          <div style={{ textAlign: "center" }}>
-            <div
-              style={{ fontSize: "1rem", color: "#666", marginBottom: "1rem" }}
-            >
-              {currentIndex + 1 < data.length
-                ? "Next question in 2 seconds..."
-                : "Quiz complete!"}
-            </div>
+          {/* Question */}
+          <h1
+            style={{
+              fontSize: "1.8rem",
+              marginBottom: "2rem",
+              color: "#333",
+              lineHeight: "1.4",
+            }}
+          >
+            {current.question}
+          </h1>
+
+          {/* Answer options */}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "1rem",
+              marginBottom: "2rem",
+            }}
+          >
+            {current.options.map((option, index) => {
+              const isSelected = selectedAnswer === option[0];
+              const isCorrect = current.correct === option[0];
+              const showResult = showAnswer;
+
+              let buttonStyle = {
+                padding: "1rem",
+                fontSize: "1rem",
+                cursor: showResult ? "default" : "pointer",
+                borderRadius: "8px",
+                // border: "2px solid #e0e0e0",
+                backgroundColor: "white",
+                transition: "all 0.2s ease",
+                textAlign: "left",
+                color: "black",
+              };
+
+              if (showResult) {
+                if (isSelected && isCorrect) {
+                  buttonStyle = {
+                    ...buttonStyle,
+                    backgroundColor: "#4caf50",
+                    color: "white",
+                    borderColor: "#4caf50",
+                  };
+                } else if (isSelected && !isCorrect) {
+                  buttonStyle = {
+                    ...buttonStyle,
+                    backgroundColor: "#f44336",
+                    color: "white",
+                    borderColor: "#f44336",
+                  };
+                } else if (isCorrect) {
+                  buttonStyle = {
+                    ...buttonStyle,
+                    backgroundColor: "#4caf50",
+                    color: "white",
+                    borderColor: "#4caf50",
+                  };
+                }
+              } else if (isSelected) {
+                buttonStyle = {
+                  ...buttonStyle,
+                  backgroundColor: "#e3f2fd",
+                  borderColor: "#1976d2",
+                };
+              }
+
+              return (
+                <button
+                  key={index}
+                  style={buttonStyle}
+                  onClick={() => !showResult && handleAnswer(option[0])}
+                  disabled={showResult}
+                >
+                  {option}
+                </button>
+              );
+            })}
           </div>
-        )}
-      </div>
+
+          {/* Feedback message */}
+          {showAnswer && (
+            <div
+              style={{
+                padding: "1rem",
+                borderRadius: "8px",
+                textAlign: "center",
+                marginBottom: "2rem",
+                backgroundColor:
+                  selectedAnswer === current.correct ? "#e8f5e8" : "#ffebee",
+                color:
+                  selectedAnswer === current.correct ? "#2e7d32" : "#c62828",
+              }}
+            >
+              {selectedAnswer === current.correct
+                ? "✅ Correct!"
+                : "❌ Incorrect. The correct answer is highlighted above."}
+            </div>
+          )}
+
+          {/* Navigation */}
+          {showAnswer && (
+            <div style={{ textAlign: "center" }}>
+              <div
+                style={{
+                  fontSize: "1rem",
+                  color: "#666",
+                  marginBottom: "1rem",
+                }}
+              >
+                {currentIndex + 1 < data.length
+                  ? "Next question in 2 seconds..."
+                  : "Quiz complete!"}
+              </div>
+            </div>
+          )}
+        </div>
+      </>
     );
   }
 }
