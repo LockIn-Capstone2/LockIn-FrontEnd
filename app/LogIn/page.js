@@ -1,4 +1,4 @@
-import Image from "next/image";
+"use client";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,10 +11,21 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 
-function LogIn() {
+export default function LogIn() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleEmailChange = (event) => {
+    setEmail(event.target.value);
+  };
+
+  const handlePasswordChange = (event) => {
+    setPassword(event.target.value);
+  };
+
   return (
     <div className="bg-[url('/Shapes.png')] bg-cover bg-center bg-no-repeat min-h-screen flex items-center justify-center bg-white">
       <Card className="w-full max-w-sm">
@@ -33,21 +44,14 @@ function LogIn() {
           <form>
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
-                <Label htmlFor="firstName">First Name</Label>
-                <Input
-                  id="firstName"
-                  type="firstName"
-                  placeholder="John Doe"
-                  required
-                />
-              </div>
-              <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="m@example.com"
+                  placeholder="johndoe@example.com"
                   required
+                  value={email}
+                  onChange={handleEmailChange}
                 />
               </div>
               <div className="grid gap-2">
@@ -60,7 +64,14 @@ function LogIn() {
                     Forgot your password?
                   </a>
                 </div>
-                <Input id="password" type="password" required />
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="********"
+                  required
+                  value={password}
+                  onChange={handlePasswordChange}
+                />
               </div>
             </div>
           </form>
@@ -77,5 +88,3 @@ function LogIn() {
     </div>
   );
 }
-
-export default LogIn;
