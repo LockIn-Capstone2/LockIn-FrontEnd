@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import React, { useState, useEffect } from "react";
 import { validate } from "email-validator";
 import { Alert } from "@mui/material";
+import axios from "axios";
 import Link from "next/link";
 
 export default function Signup() {
@@ -21,6 +22,7 @@ export default function Signup() {
   const [lastName, setLastName] = useState("");
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [validation, setValidation] = useState(false);
 
   const handleFirstNameChange = (event) => {
@@ -43,10 +45,27 @@ export default function Signup() {
     setPassword(newValue);
   };
 
-  const handleSignUp = (event) => {
+  const handleUsernameChange = (event) => {
+    const newValue = event.target.value;
+    setUsername(newValue);
+  };
+
+  const handleSignUp = async (event) => {
     event.preventDefault();
     if (validate(email)) {
       setValidation(true);
+    }
+
+    try {
+      const res = await axios.post(`http://localhost:8080/auth/signup`, {
+        firstName,
+        lastName,
+        username,
+        email,
+        password,
+      });
+    } catch (error) {
+      console.error("error:", error);
     }
   };
 
@@ -89,6 +108,18 @@ export default function Signup() {
                   required
                   onChange={handleLastNameChange}
                   value={lastName}
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="email">Username</Label>
+                <Input
+                  id="username"
+                  type="text"
+                  placeholder="tonysoprano12"
+                  required
+                  onChange={handleUsernameChange}
+                  value={username}
                 />
               </div>
 
