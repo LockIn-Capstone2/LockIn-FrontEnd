@@ -11,7 +11,7 @@ import {
     CardFooter,
 } from "@/components/ui/card";
 
-import { Inpute } from "@/components/ui/input";
+import { Input } from "@/components/ui/input";
 import { Buttton } from "@/components/ui/button";
 
 function GradeCalculator() {
@@ -23,4 +23,16 @@ function GradeCalculator() {
     // state to hold calculated final grade
     const [finalGrade, setFinalGrade] = useState(null);
    
+    // handle general changes to assignment fields
+    const handleChange = (index, field, value) => {
+        // Ensure values between 0-100 for grade & weight
+        if (field === "grade" || field === "weight") {
+            const num = Number(value);
+            if (num < 0 || num > 100) return;
+        }
+        // Make a copy of the assignments, change the specific field in row, then update state
+        const updated = [...assignments];
+        updated[index][field] = value;
+        setAssignments(updated);
+    };
 }
