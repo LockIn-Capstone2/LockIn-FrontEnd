@@ -250,7 +250,7 @@ export default function QuizPage() {
     return (
       <div style={{ padding: "2rem", maxWidth: "800px", margin: "0 auto" }}>
         {/* Progress bar */}
-        <div
+        {/* <div
           style={{
             width: "100%",
             height: "8px",
@@ -268,6 +268,21 @@ export default function QuizPage() {
               transition: "width 0.3s ease",
             }}
           />
+        </div> */}
+
+        <div className="flex justify-between mb-1">
+          <span className="text-base font-medium text-blue-700 dark:text-white">
+            Quiz
+          </span>
+          <span className="text-sm font-medium text-blue-700 dark:text-white">
+            {progress}%
+          </span>
+        </div>
+        <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+          <div
+            className="bg-blue-600 h-2.5 rounded-full"
+            // style="width: 45%"
+          ></div>
         </div>
 
         {/* Question counter */}
