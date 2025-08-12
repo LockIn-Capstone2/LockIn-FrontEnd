@@ -4,6 +4,8 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import ThemeToggleButton from "@/components/ui/theme-toggle-button";
+import { Hourglass } from "ldrs/react";
+import "ldrs/react/Hourglass.css";
 
 export default function QuizPage() {
   const { quizId } = useParams();
@@ -121,11 +123,9 @@ export default function QuizPage() {
   // Loading state
   if (loading) {
     return (
-      <div style={{ padding: "2rem", textAlign: "center" }}>
-        <div style={{ fontSize: "1.5rem", marginBottom: "1rem" }}>
-          Loading quiz...
-        </div>
-        <div style={{ fontSize: "1rem", color: "#666" }}>
+      <div className="p-8 text-center">
+        <Hourglass size="40" bgOpacity="0.1" speed="1.75" color="white" />
+        <div className="text-lg text-white font-[poppins]">
           Please wait while we prepare your content
         </div>
       </div>
