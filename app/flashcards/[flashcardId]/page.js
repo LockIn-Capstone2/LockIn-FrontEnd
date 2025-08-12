@@ -3,6 +3,8 @@
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { GradientBars } from "@/components/ui/gradient-bars";
+import ThemeToggleButton from "@/components/ui/theme-toggle-button";
 
 export default function FlashcardPage() {
   const { flashcardId } = useParams();
@@ -150,148 +152,163 @@ export default function FlashcardPage() {
     const backText = current.back || current.answer || current.correct;
 
     return (
-      <div style={{ padding: "2rem", maxWidth: "800px", margin: "0 auto" }}>
-        {/* Progress indicator */}
-        <div
-          style={{
-            textAlign: "center",
-            marginBottom: "2rem",
-            color: "#666",
-          }}
-        >
-          Card {currentIndex + 1} of {data.length}
-        </div>
+      <div className="relative min-h-screen">
+        <GradientBars colors={["#3c5899", "transparent"]} />
+        <div className="relative z-20">
+          <ThemeToggleButton />
 
-        {/* Flashcard */}
-        <div
-          style={{
-            border: "2px solid #e0e0e0",
-            borderRadius: "16px",
-            padding: "3rem",
-            marginBottom: "2rem",
-            backgroundColor: "white",
-            minHeight: "300px",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            alignItems: "center",
-            textAlign: "center",
-            boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-          }}
-        >
-          {!showAnswer ? (
-            <div>
-              <h2
+          <div className="p-8 max-w-[800px] m-auto">
+            {/* Progress indicator */}
+            <div
+              style={{
+                textAlign: "center",
+                marginBottom: "2rem",
+                color: "#666",
+              }}
+            >
+              Card {currentIndex + 1} of {data.length}
+            </div>
+
+            {/* Flashcard */}
+            <div
+              style={{
+                border: "2px solid #e0e0e0",
+                borderRadius: "16px",
+                padding: "3rem",
+                marginBottom: "2rem",
+                backgroundColor: "white",
+                minHeight: "300px",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "center",
+                textAlign: "center",
+                boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+              }}
+            >
+              {!showAnswer ? (
+                <div>
+                  <h2
+                    style={{
+                      fontSize: "1.5rem",
+                      marginBottom: "1rem",
+                      color: "#333",
+                    }}
+                  >
+                    Question
+                  </h2>
+                  <p
+                    style={{
+                      fontSize: "1.2rem",
+                      lineHeight: "1.6",
+                      color: "#555",
+                    }}
+                  >
+                    {frontText}
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <h2
+                    style={{
+                      fontSize: "1.5rem",
+                      marginBottom: "1rem",
+                      color: "#333",
+                    }}
+                  >
+                    Answer
+                  </h2>
+                  <p
+                    style={{
+                      fontSize: "1.2rem",
+                      lineHeight: "1.6",
+                      color: "#555",
+                    }}
+                  >
+                    {backText}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Metadata */}
+            {(current.difficulty || current.cognitive_skill) && (
+              <div
                 style={{
-                  fontSize: "1.5rem",
-                  marginBottom: "1rem",
-                  color: "#333",
+                  textAlign: "center",
+                  marginBottom: "2rem",
+                  padding: "1rem",
+                  backgroundColor: "#f5f5f5",
+                  borderRadius: "8px",
                 }}
               >
-                Question
-              </h2>
-              <p
-                style={{ fontSize: "1.2rem", lineHeight: "1.6", color: "#555" }}
-              >
-                {frontText}
-              </p>
-            </div>
-          ) : (
-            <div>
-              <h2
+                {current.difficulty && (
+                  <span style={{ marginRight: "1rem", color: "#666" }}>
+                    Difficulty: <strong>{current.difficulty}</strong>
+                  </span>
+                )}
+                {current.cognitive_skill && (
+                  <span style={{ color: "#666" }}>
+                    Skill: <strong>{current.cognitive_skill}</strong>
+                  </span>
+                )}
+              </div>
+            )}
+
+            {/* Navigation buttons */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <button
+                onClick={handleFlashcardPrevious}
                 style={{
-                  fontSize: "1.5rem",
-                  marginBottom: "1rem",
-                  color: "#333",
+                  padding: "0.75rem 1.5rem",
+                  fontSize: "1rem",
+                  backgroundColor: "#666",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "8px",
+                  cursor: "pointer",
                 }}
               >
-                Answer
-              </h2>
-              <p
-                style={{ fontSize: "1.2rem", lineHeight: "1.6", color: "#555" }}
-              >
-                {backText}
-              </p>
-            </div>
-          )}
-        </div>
+                ← Previous
+              </button>
 
-        {/* Metadata */}
-        {(current.difficulty || current.cognitive_skill) && (
-          <div
-            style={{
-              textAlign: "center",
-              marginBottom: "2rem",
-              padding: "1rem",
-              backgroundColor: "#f5f5f5",
-              borderRadius: "8px",
-            }}
-          >
-            {current.difficulty && (
-              <span style={{ marginRight: "1rem", color: "#666" }}>
-                Difficulty: <strong>{current.difficulty}</strong>
-              </span>
-            )}
-            {current.cognitive_skill && (
-              <span style={{ color: "#666" }}>
-                Skill: <strong>{current.cognitive_skill}</strong>
-              </span>
-            )}
+              <button
+                onClick={() => setShowAnswer(!showAnswer)}
+                style={{
+                  padding: "0.75rem 1.5rem",
+                  fontSize: "1rem",
+                  backgroundColor: showAnswer ? "#4caf50" : "#1976d2",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "8px",
+                  cursor: "pointer",
+                }}
+              >
+                {showAnswer ? "Show Question" : "Show Answer"}
+              </button>
+
+              <button
+                onClick={handleFlashcardNext}
+                style={{
+                  padding: "0.75rem 1.5rem",
+                  fontSize: "1rem",
+                  backgroundColor: "#666",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "8px",
+                  cursor: "pointer",
+                }}
+              >
+                Next →
+              </button>
+            </div>
           </div>
-        )}
-
-        {/* Navigation buttons */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <button
-            onClick={handleFlashcardPrevious}
-            style={{
-              padding: "0.75rem 1.5rem",
-              fontSize: "1rem",
-              backgroundColor: "#666",
-              color: "white",
-              border: "none",
-              borderRadius: "8px",
-              cursor: "pointer",
-            }}
-          >
-            ← Previous
-          </button>
-
-          <button
-            onClick={() => setShowAnswer(!showAnswer)}
-            style={{
-              padding: "0.75rem 1.5rem",
-              fontSize: "1rem",
-              backgroundColor: showAnswer ? "#4caf50" : "#1976d2",
-              color: "white",
-              border: "none",
-              borderRadius: "8px",
-              cursor: "pointer",
-            }}
-          >
-            {showAnswer ? "Show Question" : "Show Answer"}
-          </button>
-
-          <button
-            onClick={handleFlashcardNext}
-            style={{
-              padding: "0.75rem 1.5rem",
-              fontSize: "1rem",
-              backgroundColor: "#666",
-              color: "white",
-              border: "none",
-              borderRadius: "8px",
-              cursor: "pointer",
-            }}
-          >
-            Next →
-          </button>
         </div>
       </div>
     );

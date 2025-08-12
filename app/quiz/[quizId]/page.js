@@ -200,7 +200,7 @@ export default function QuizPage() {
     return (
       <div className="relative min-h-screen">
         <GradientBars colors={["#3c5899", "transparent"]} />
-        <div className="relative z-10">
+        <div className="relative z-20">
           <ThemeToggleButton />
           <div className="p-8 max-w-[800px] m-auto">
             {/* Progress bar */}
