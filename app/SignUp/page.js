@@ -24,25 +24,27 @@ export default function Signup() {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [validation, setValidation] = useState(false);
+  const [passwordErrors, setPasswordErrors] = useState([]);
 
   const handleFirstNameChange = (event) => {
-    const newValue = event.target.value;
-    setFirstName(newValue);
+    setFirstName(event.target.value);
   };
 
   const handleLastNameChange = (event) => {
-    const newValue = event.target.value;
-    setLastName(newValue);
+    setLastName(event.target.value);
   };
 
   const handleEmailChange = (event) => {
-    const newValue = event.target.value;
-    setEmail(newValue);
+    setEmail(event.target.value);
   };
 
   const handlePasswordChange = (event) => {
-    const newValue = event.target.value;
-    setPassword(newValue);
+    setPassword(event.target.value);
+    if (event.target.value.length < 8) {
+      setPasswordErrors(["Password must be greater than 8 characters"]);
+    } else {
+      setPasswordErrors([]);
+    }
   };
 
   const handleUsernameChange = (event) => {
@@ -154,15 +156,19 @@ export default function Signup() {
                   value={password}
                 />
               </div>
-              <Button type="submit" className="w-full">
+              <Button
+                disabled={passwordErrors.length > 0}
+                type="submit"
+                className="w-full"
+              >
                 Sign Up
               </Button>
               {validation ? (
                 <Alert severity="success">Signed up successfully</Alert>
               ) : null}
-              <Button variant="outline" className="w-full">
+              {/* <Button variant="outline" className="w-full">
                 Sign Up with Google
-              </Button>
+              </Button> */}
             </div>
           </form>
         </CardContent>
