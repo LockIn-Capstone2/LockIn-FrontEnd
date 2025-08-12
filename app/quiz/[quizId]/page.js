@@ -140,16 +140,7 @@ export default function QuizPage() {
         <div className="text-[1rem] text-[#f43030] mb-8">{error}</div>
         <button
           onClick={() => window.location.reload()}
-          // style={{
-          //   padding: "0.75rem 1.5rem",
-          //   fontSize: "1rem",
-          //   backgroundColor: "#1976d2",
-          //   color: "white",
-          //   border: "none",
-          //   borderRadius: "8px",
-          //   cursor: "pointer",
-          // }}
-          className="px-"
+          className="py-3 px-6 text-lg bg-[#1976d2] text-white border-none rounded-[8px] cursor-pointer"
         >
           Try Again
         </button>
@@ -160,10 +151,8 @@ export default function QuizPage() {
   // No data state
   if (!data || data.length === 0) {
     return (
-      <div style={{ padding: "2rem", textAlign: "center" }}>
-        <div style={{ fontSize: "1.5rem", color: "#666" }}>
-          No quiz data available
-        </div>
+      <div className="p-8 text-center">
+        <div className="text-2xl text-[#f00]">No quiz data available</div>
       </div>
     );
   }
@@ -180,49 +169,21 @@ export default function QuizPage() {
     };
 
     return (
-      <div
-        style={{
-          padding: "2rem",
-          maxWidth: "800px",
-          margin: "0 auto",
-          textAlign: "center",
-        }}
-      >
-        <h1 style={{ color: "#1976d2", marginBottom: "1rem" }}>
-          Quiz Complete!
-        </h1>
-        <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>
-          {getScoreMessage()}
-        </div>
-        <div style={{ fontSize: "1.5rem", marginBottom: "2rem" }}>
+      <div className="p-8 max-w-[800px] m-auto text-center">
+        <h1 className="text-[#1976d2] mb-4 font-[poppins]">Quiz Complete!</h1>
+        <div className="text-2xl mb-2 font-[poppins]">{getScoreMessage()}</div>
+        <div className="text-2xl mb-8 font-[poppins]">
           Your score: {score} / {data.length} ({percentage}%)
         </div>
         <button
           onClick={restartQuiz}
-          style={{
-            padding: "1rem 2rem",
-            fontSize: "1.2rem",
-            backgroundColor: "#4caf50",
-            color: "white",
-            border: "none",
-            borderRadius: "8px",
-            cursor: "pointer",
-            marginRight: "1rem",
-          }}
+          className="py-4 px-8 text-[1.2rem] bg-[#4caf50] text-white border-none rounded-2xl cursor-pointer mr-4 font-[poppins]"
         >
           Restart Quiz
         </button>
         <button
           onClick={() => navigate.push("/LockInChat")}
-          style={{
-            padding: "1rem 2rem",
-            fontSize: "1.2rem",
-            backgroundColor: "#666",
-            color: "white",
-            border: "none",
-            borderRadius: "8px",
-            cursor: "pointer",
-          }}
+          className="py-4 px-8 text-[1.2rem] bg-[#666] text-white border-none rounded-2xl cursor-pointer"
         >
           Go Back
         </button>
@@ -238,7 +199,7 @@ export default function QuizPage() {
     return (
       <>
         <ThemeToggleButton />
-        <div style={{ padding: "2rem", maxWidth: "800px", margin: "0 auto" }}>
+        <div className="p-8 max-w-[800px] m-auto">
           {/* Progress bar */}
 
           <div className="flex justify-between mb-1">
@@ -257,37 +218,15 @@ export default function QuizPage() {
           </div>
 
           {/* Question counter */}
-          <div
-            style={{
-              textAlign: "center",
-              marginBottom: "2rem",
-              color: "#666",
-            }}
-          >
+          <div className="text-center mb-8 font-[poppins]">
             Question {currentIndex + 1} of {data.length}
           </div>
 
           {/* Question */}
-          <h1
-            style={{
-              fontSize: "1.8rem",
-              marginBottom: "2rem",
-              color: "#333",
-              lineHeight: "1.4",
-            }}
-          >
-            {current.question}
-          </h1>
+          <h1 className="text-2xl mb-8 leading-6">{current.question}</h1>
 
           {/* Answer options */}
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "1rem",
-              marginBottom: "2rem",
-            }}
-          >
+          <div className="flex flex-col gap-4 mb-8">
             {current.options.map((option, index) => {
               const isSelected = selectedAnswer === option[0];
               const isCorrect = current.correct === option[0];
@@ -298,7 +237,6 @@ export default function QuizPage() {
                 fontSize: "1rem",
                 cursor: showResult ? "default" : "pointer",
                 borderRadius: "8px",
-                // border: "2px solid #e0e0e0",
                 backgroundColor: "white",
                 transition: "all 0.2s ease",
                 textAlign: "left",
@@ -372,13 +310,7 @@ export default function QuizPage() {
           {/* Navigation */}
           {showAnswer && (
             <div style={{ textAlign: "center" }}>
-              <div
-                style={{
-                  fontSize: "1rem",
-                  color: "#666",
-                  marginBottom: "1rem",
-                }}
-              >
+              <div className="text-[1rem] mb-4">
                 {currentIndex + 1 < data.length
                   ? "Next question in 2 seconds..."
                   : "Quiz complete!"}
