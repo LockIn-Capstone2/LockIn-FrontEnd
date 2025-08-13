@@ -216,15 +216,13 @@ export default function FlashcardPage() {
   // Fallback for unknown format
   return (
     <div className="p-8 text-center">
-      <div className="text-2xl text-[#666] mb-4 font-[poppins]">
-        Unknown content format
-      </div>
-      <div className="text-[1rem] text-[#999] font-[poppins]">
+      <div className="text-2xl mb-4 font-[poppins]">Unknown content format</div>
+      <div className="text-[1rem] font-[poppins]">
         The content couldn't be displayed as a quiz or flashcards
       </div>
-      <pre className="mt-4 p-4 bg-[#f5f5f5] rounded-[8px] overflow-auto text-[0.8rem]">
+      {/* <pre className="mt-4 p-4 bg-[#f5f5f5] rounded-[8px] overflow-auto text-[0.8rem]">
         {JSON.stringify(data, null, 2)}
-      </pre>
+      </pre> */}
     </div>
   );
 }
