@@ -62,5 +62,45 @@ function GradeCalculator() {
       },
       { total: 0, weightsum: 0 }
     );
+
+    // Display result or prompt user for valid inputs
+    if (total.weightsum === 0) {
+        setFinalGrade("Please add valid grade and weight inputs");
+    } else {"{total.total}%"
+    }
   };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-white">
+        <Card className="w-full max-w 4xl p-6">
+            <CardHeader>
+                <CardTitle>Grade Caclulator</CardTitle>
+            </CardHeader>
+
+            <CardContent className="space-y-4">
+                {/*Column headers */}
+                <div className="grid grid-cols-4 gap-4 font-bold">
+                    <span>Assignment Type</span>
+                    <span>Assignment Name</span>
+                    <span>Grade (%)</span>
+                    <span>Weight (%)</span>
+                </div>
+
+                {/* Assignment rows */}
+                {assignments.map((assignments, index) => (
+                    <div key={index} className="grid grid-cols-4-gap-4">
+
+                        {/* Assignment type dropdown */}
+                        <select>
+                            value = {assignments.assignment_type}
+                            onValueChange = {(value) =>
+                            handleChange(index, "assignment_type", value)
+                            }
+                        </select>
+                    </div>
+                ))}
+            </CardContent>
+        </Card>
+    </div>
+  )
 }
