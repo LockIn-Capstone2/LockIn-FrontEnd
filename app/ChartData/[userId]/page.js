@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import React from "react";
 import { LineChart } from "@mui/x-charts";
@@ -9,7 +9,7 @@ function ChartData() {
   const [studyData, setStudyData] = useState([]);
   const { userId } = useParams();
 
-  const getData = async () => {
+  const getData = useCallback(async () => {
     try {
       const response = await axios.get(
         `http://localhost:8080/api/data/${userId}`
@@ -20,11 +20,11 @@ function ChartData() {
     } catch (error) {
       console.error("error:", error);
     }
-  };
+  }, [userId]);
 
   useEffect(() => {
     getData();
-  }, []);
+  }, [getData]);
 
   function durationToMinutes(durationStr) {
     const [hours, minutes, seconds] = durationStr.split(":").map(Number);

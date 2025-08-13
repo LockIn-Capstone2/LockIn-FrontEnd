@@ -8,6 +8,11 @@ import { useGSAP } from "@gsap/react";
 
 import { SplitText } from "gsap/SplitText";
 // import { TextPlugin } from "gsap/TextPlugin";
+import { VelocityScroll } from "@/components/ui/scrollbasedvelocity";
+import Team2 from "@/components/Team Component/team-2";
+import FooterGlow from "@/components/Footer/footer-glow";
+import AboutUs1 from "@/components/AboutUs/about-us-1";
+import Particles from "@/components/ui/Particles";
 
 gsap.registerPlugin(SplitText);
 
@@ -93,7 +98,18 @@ export default function Home() {
   return (
     <section id="hero" className="px-4 md-px-6">
       <NavBarComponent />
-      <div className="min-h-screen bg-[url('/Shapes.png')] bg-cover bg-center bg-no-repeat">
+      <div className="min-h-screen min-w-screen relative">
+        <div className="absolute inset-0 z-0">
+          <Particles
+            particleCount={900}
+            particleSpread={10}
+            speed={0.1}
+            particleBaseSize={110}
+            moveParticlesOnHover={true}
+            alphaParticles={false}
+            disableRotation={false}
+          />
+        </div>
         <div className="mx-auto w-full max-w-7xl px-4 md:px-6">
           <div className="grid min-h-[65vh] grid-cols-1 gap-8 items-center md:grid-cols-2">
             {/* Right-side image (on desktop) */}
@@ -132,11 +148,20 @@ export default function Home() {
                 id="split-description"
                 className="block uppercase font-[poppins] text-sm md:text-xl font-bold tracking-wide"
               >
-                A Platform that helps students around the world on track with
-                their classes and grades, to maintain a high GPA
+                A platform designed to help students worldwide stay on track
+                with their classes and grades, ensuring they maintain a high
+                GPA.
               </span>
             </div>
           </div>
+          <VelocityScroll
+            text="Stay Focused · Stay Ahead · Unlock Your Potential · Track. Learn. Excel. · Your Academic Journey Starts Here · Lock In Now!"
+            default_velocity={4}
+            className="split-char text-4xl font-bold uppercase"
+          />
+          <Team2 />
+          <AboutUs1 />
+          <FooterGlow />
         </div>
       </div>
     </section>

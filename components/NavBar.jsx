@@ -15,9 +15,9 @@ import ThemeToggle from "./ThemeToggle";
 // Navigation links array to be used in both desktop and mobile menus
 const navigationLinks = [
   { href: "#", label: "Home", active: true },
-  { href: "#", label: "Features" },
-  { href: "#", label: "Pricing" },
-  { href: "#", label: "About" },
+  { href: "/LockInChat", label: "Study with AI", active: false },
+  { href: "/StudySession", label: "Study Timer", active: false },
+  { href: "#", label: "Tasks", active: false },
 ];
 
 export default function NavBarComponent() {
