@@ -12,7 +12,9 @@ import {
 } from "@/components/ui/card";
 
 import { Input } from "@/components/ui/input";
-import { Buttton } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
+import { SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select } from "radix-ui";
 
 function GradeCalculator() {
   // State for the list of assignments
@@ -34,6 +36,12 @@ function GradeCalculator() {
     const updated = [...assignments];
     updated[index][field] = value;
     setAssignments(updated);
+  };
+
+  // Add a new blank assignment row
+  const addAssignment = () => {
+    setAssignments([...assignments, {assignment_type: "", assignment_name: "", grade: "", weight: ""},
+    ]);
   };
 
   // Calculate final grade
@@ -91,16 +99,71 @@ function GradeCalculator() {
                     <div key={index} className="grid grid-cols-4-gap-4">
 
                         {/* Assignment type dropdown */}
-                        <select>
+                        <select
                             value = {assignments.assignment_type}
                             onValueChange = {(value) =>
                             handleChange(index, "assignment_type", value)
                             }
+                        >
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select Type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="Homework">Homework</SelectItem>
+                                <SelectItem value="Quiz">Quiz</SelectItem>
+                                <SelectItem value="Final">Final</SelectItem>
+                            </SelectContent>
                         </select>
+
+                        {/* Assignment Name Input*/}
+                        <Input
+                        type="text"
+                        placeholder="Assignment Name"
+                        value={assignments.assignment_name}
+                        onChange={(e) => 
+                            handleChange(index, "assignment_name", e.target.value)
+                        }
+                        />
+
+                        {/* Grade Input */}
+                        <Input
+                        type="number"
+                        placeholder="Grade (%)"
+                        value={assignments.grade}
+                        onChange={(e) =>
+                            handleChange(index, "grade", e.target.value)
+                        }
+                        />
+
+                        {/* Weight Input */}
+                        <Input
+                        type="number"
+                        placeholder="Weight (%)"
+                        value={assignments.weight}
+                        onChange={(e) =>
+                            handleChange(index, "weight", e.target.value)
+                    }
+                    />
                     </div>
                 ))}
+
+                {/* Add another assignment button */}
+                <Button type="button" onClick={addAssignment}>
+                    Add Another
+                </Button>
             </CardContent>
+
+            <CardFooter className="flex flex-col items-start gap-2">
+                <Button onClick={calculateGrade}>Calculate Grade</Button>
+
+                {/* Display calculated final grade */}
+                {finalGrade && (
+                    <p className="text-lg font-bold">Final Grade: {finalGrade}</p>
+                )}
+            </CardFooter>
         </Card>
     </div>
-  )
+  );
 }
+
+export default GradeCalculator;
