@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { GradientBars } from "@/components/ui/gradient-bars";
 import ThemeToggleButton from "@/components/ui/theme-toggle-button";
+import { ShareButtonDemo } from "@/components/shareButtonComponent";
+import { Hourglass } from "ldrs/react";
 
 export default function FlashcardPage() {
   const { flashcardId } = useParams();
@@ -142,10 +144,12 @@ export default function FlashcardPage() {
         <GradientBars colors={["#3c5899", "transparent"]} />
         <div className="relative z-20">
           <ThemeToggleButton />
-
+          <div className="flex justify-end">
+            <ShareButtonDemo />
+          </div>
           <div className="p-8 max-w-[800px] m-auto">
             {/* Progress indicator */}
-            <div className="text-center mb-8 text-[#666] font-[poppins]">
+            <div className="text-center mb-8  font-[poppins]">
               Card {currentIndex + 1} of {data.length}
             </div>
 
@@ -153,35 +157,27 @@ export default function FlashcardPage() {
             <div className="border-2 border-[#e0e0e0] rounded-[16px] p-12 mb-8 min-h-[300px] flex flex-col justify-center items-center text-center shadow-[0_4px_6px_rgba(0,0,0,0.1)]">
               {!showAnswer ? (
                 <div>
-                  <h2 className="text-2xl text-[#333] mb-4 font-[poppins]">
-                    Question
-                  </h2>
-                  <p className="text-lg text-[#555] font-[poppins]">
-                    {frontText}
-                  </p>
+                  <h2 className="text-2xl mb-4 font-[poppins]">Question</h2>
+                  <p className="text-lg  font-[poppins]">{frontText}</p>
                 </div>
               ) : (
                 <div>
-                  <h2 className="text-2xl text-[#333] mb-4 font-[poppins]">
-                    Answer
-                  </h2>
-                  <p className="text-lg text-[#555] font-[poppins]">
-                    {backText}
-                  </p>
+                  <h2 className="text-2xl  mb-4 font-[poppins]">Answer</h2>
+                  <p className="text-lg  font-[poppins]">{backText}</p>
                 </div>
               )}
             </div>
 
             {/* Metadata */}
             {(current.difficulty || current.cognitive_skill) && (
-              <div className="text-center mb-8 p-4 bg-[#f5f5f5] rounded-[8px]">
+              <div className="text-center mb-8 p-4  rounded-[8px]">
                 {current.difficulty && (
-                  <span className="mr-4 text-[#666]">
+                  <span className="mr-4 ">
                     Difficulty: <strong>{current.difficulty}</strong>
                   </span>
                 )}
                 {current.cognitive_skill && (
-                  <span className="text-[#666]">
+                  <span className="">
                     Skill: <strong>{current.cognitive_skill}</strong>
                   </span>
                 )}
