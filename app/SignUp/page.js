@@ -56,6 +56,27 @@ export default function Signup() {
     setUsername(newValue);
   };
 
+  const passwordStrengthBar = (passwordStrength) => {
+    switch (passwordStrength.score) {
+      case 0:
+        return <p className="font-[poppins] text-[red]">Very Weak</p>;
+
+      case 1:
+        return <p className="font-[poppins] text-[yellow]">Weak</p>;
+
+      case 2:
+        return <p className="font-[poppins] text-[orange]">Moderate</p>;
+
+      case 3:
+        return <p className="font-[poppins] text-[#a3e635]">Strong</p>;
+
+      case 4:
+        return <p className="font-[poppins] text-[#16a34a]">Very Strong</p>;
+      default:
+        return null;
+    }
+  };
+
   const handleSignUp = async (event) => {
     event.preventDefault();
     if (validate(email)) {
@@ -162,14 +183,19 @@ export default function Signup() {
               </div>
               {passwordStrength ? (
                 <div className="font-[poppins]">
-                  <p>Password strength: {passwordStrength.score}</p>
-                  <p>
-                    Feedback: {passwordStrength.feedback.suggestions.join(", ")}
-                  </p>
+                  <div>{passwordStrengthBar(passwordStrength)}</div>
+                  {passwordStrength.feedback.suggestions.length ? (
+                    <p>
+                      Feedback:{" "}
+                      {passwordStrength.feedback.suggestions.join(", ")}
+                    </p>
+                  ) : null}
                 </div>
               ) : null}
               <Button
-                disabled={passwordErrors.length > 0}
+                disabled={
+                  passwordErrors.length > 0 || passwordStrength?.score < 2
+                }
                 type="submit"
                 className="w-full"
               >
