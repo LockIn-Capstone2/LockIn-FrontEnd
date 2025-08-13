@@ -12,6 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import React, { useState, useEffect } from "react";
+import zxcvbn from "zxcvbn";
 import { validate } from "email-validator";
 import { Alert } from "@mui/material";
 import axios from "axios";
@@ -25,6 +26,7 @@ export default function Signup() {
   const [username, setUsername] = useState("");
   const [validation, setValidation] = useState(false);
   const [passwordErrors, setPasswordErrors] = useState([]);
+  const [passwordStrength, setPasswordStrength] = useState(null);
 
   const handleFirstNameChange = (event) => {
     setFirstName(event.target.value);
@@ -45,6 +47,8 @@ export default function Signup() {
     } else {
       setPasswordErrors([]);
     }
+    const result = zxcvbn(password);
+    setPasswordStrength(result);
   };
 
   const handleUsernameChange = (event) => {
@@ -156,6 +160,14 @@ export default function Signup() {
                   value={password}
                 />
               </div>
+              {passwordStrength ? (
+                <div className="font-[poppins]">
+                  <p>Password strength: {passwordStrength.score}</p>
+                  <p>
+                    Feedback: {passwordStrength.feedback.suggestions.join(", ")}
+                  </p>
+                </div>
+              ) : null}
               <Button
                 disabled={passwordErrors.length > 0}
                 type="submit"
