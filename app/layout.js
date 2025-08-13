@@ -4,6 +4,13 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Poppins } from "next/font/google";
 import { Rubik_Glitch_Pop } from "next/font/google";
 
+const poppins = Poppins({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-poppins",
+  weight: ["400", "500", "600", "700"],
+});
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -14,15 +21,10 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const poppins = Poppins({
-  variable: "--font-poppins",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
-
 const rubikGlitch = Rubik_Glitch_Pop({
   subsets: ["latin"],
   weight: "400",
+  variable: "--font-rubik-glitch",
 });
 
 export const metadata = {
