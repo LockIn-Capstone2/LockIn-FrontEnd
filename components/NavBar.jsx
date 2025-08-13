@@ -17,7 +17,7 @@ const navigationLinks = [
   { href: "#", label: "Home", active: true },
   { href: "/LockInChat", label: "Study with AI", active: false },
   { href: "/StudySession", label: "Study Timer", active: false },
-  { href: "#", label: "Tasks", active: false },
+  { href: "/Tasks", label: "Tasks", active: false },
 ];
 
 export default function NavBarComponent() {
