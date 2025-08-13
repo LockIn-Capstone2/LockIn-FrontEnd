@@ -12,6 +12,7 @@ import { VelocityScroll } from "@/components/ui/scrollbasedvelocity";
 import Team2 from "@/components/Team Component/team-2";
 import FooterGlow from "@/components/Footer/footer-glow";
 import AboutUs1 from "@/components/AboutUs/about-us-1";
+import Particles from "@/components/ui/Particles";
 
 gsap.registerPlugin(SplitText);
 
@@ -97,7 +98,18 @@ export default function Home() {
   return (
     <section id="hero" className="px-4 md-px-6">
       <NavBarComponent />
-      <div className="min-h-screen bg-[url('/Shapes.png')] bg-cover bg-center bg-no-repeat">
+      <div className="min-h-screen min-w-screen relative">
+        <div className="absolute inset-0 z-0">
+          <Particles
+            particleCount={900}
+            particleSpread={10}
+            speed={0.1}
+            particleBaseSize={110}
+            moveParticlesOnHover={true}
+            alphaParticles={false}
+            disableRotation={false}
+          />
+        </div>
         <div className="mx-auto w-full max-w-7xl px-4 md:px-6">
           <div className="grid min-h-[65vh] grid-cols-1 gap-8 items-center md:grid-cols-2">
             {/* Right-side image (on desktop) */}

@@ -130,6 +130,11 @@
   letter-spacing: 2px;
 }
 
+.particles-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
 
 @keyframes spin {
   to {
