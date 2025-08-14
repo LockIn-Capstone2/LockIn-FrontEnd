@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack -p 3000",
+    "dev": "next dev -p 3000",
     "build": "next build",
     "vercel-build": "next build",
     "start": "next start -p 3000",
@@ -26,6 +26,7 @@
     "@react-three/drei": "^10.6.1",
     "@react-three/fiber": "^9.3.0",
     "@shikijs/transformers": "^3.9.2",
+    "@tailwindcss/postcss": "^4.1.12",
     "axios": "^1.11.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
