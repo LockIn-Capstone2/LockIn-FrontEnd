@@ -258,6 +258,10 @@ export default function AnimatedAIChat() {
         return updatedMessages;
       });
 
+      startTransition(() => {
+        setIsTyping(true);
+      });
+
       const url = "http://localhost:8080/api/chat";
       const response = await fetch(url, {
         method: "POST",
@@ -283,18 +287,12 @@ export default function AnimatedAIChat() {
           return updated;
         });
       }
-
-      if (value.trim()) {
-        startTransition(() => {
-          setIsTyping(true);
-          setTimeout(() => {
-            setIsTyping(false);
-            setAttachments([]);
-            setValue("");
-            adjustHeight(true);
-          }, 3000);
-        });
-      }
+      startTransition(() => {
+        setIsTyping(false);
+        setAttachments([]);
+        setValue("");
+        adjustHeight(true);
+      });
     } catch (error) {
       console.error(error);
       console.log("Error sending request! ❌");
