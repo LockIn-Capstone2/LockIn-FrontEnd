@@ -46,7 +46,7 @@ const defaultValues = [
   {
     title: "Impact",
     description:
-      "Our platforms success is measured by the positive impact we have on students' academic journeys, helping them achieve their goals and unlock future opportunities.",
+      "Our platforms success is measured by the positive impact we have on students&apos; academic journeys, helping them achieve their goals and unlock future opportunities.",
     icon: "Globe",
   },
 ];

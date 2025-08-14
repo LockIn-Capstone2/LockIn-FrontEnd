@@ -218,7 +218,7 @@ export default function FlashcardPage() {
     <div className="p-8 text-center">
       <div className="text-2xl mb-4 font-[poppins]">Unknown content format</div>
       <div className="text-[1rem] font-[poppins]">
-        The content couldn't be displayed as a quiz or flashcards
+        The content couldn&apos;t be displayed as a quiz or flashcards
       </div>
       {/* <pre className="mt-4 p-4 bg-[#f5f5f5] rounded-[8px] overflow-auto text-[0.8rem]">
         {JSON.stringify(data, null, 2)}
