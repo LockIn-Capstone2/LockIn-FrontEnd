@@ -134,7 +134,7 @@ function StudyTimer() {
             </button>
             <div className="flex wrap space-x-5">
               <Input
-                type="number"
+                type="text"
                 placeholder="HH"
                 className={"w-13 text-center"}
                 onChange={handleHoursChange}
