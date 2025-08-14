@@ -23,7 +23,7 @@ export default function TasksPage({ params }) {
     className: "",
     assignment: "",
     description: "",
-    status: "pending",
+    status: "Pending",
     deadline: "",
     priority: "medium",
   });
@@ -91,14 +91,6 @@ const handleEditChange = (e) => {
     }
   };
 
-//   const handleStatusChange = async (taskId, newStatus) => {
-//   try {
-//     await axios.patch(`http://localhost:8080/api/tasks/${userId}/${taskId}`, { status: newStatus });
-//     fetchTasks(); // Refresh the list
-//   } catch (error) {
-//     console.error("Error updating status:", error);
-//   }
-// };
 
   // Filtering logic
   const filteredTasks = tasks.filter(task =>
@@ -109,7 +101,17 @@ const handleEditChange = (e) => {
 
   return (
     <div className="task-container">
-      <h1>Your Tasks (User {userId})</h1>
+      <h1 style={{
+        fontSize: '2.5rem',
+        fontWeight: 'bold',
+        textAlign: 'center',
+        margin: '2rem 0 2.5rem 0',
+        letterSpacing: '0.04em',
+        color: '#fff',
+        textShadow: '0 2px 16px #0008'
+      }}>
+        Assignment Tracker
+      </h1>
       {/* Filter UI */}
       <div className="flex gap-4 mb-4">
         <Input
