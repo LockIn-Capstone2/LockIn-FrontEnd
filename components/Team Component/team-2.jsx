@@ -53,7 +53,7 @@ const defaultMembers = [
 
 export default function Team2({
   title = "Meet Our Team",
-  subtitle = "Built by BMCC students in the TTPR program — we&apos;re solving real challenges to empower learners and elevate student success.",
+  subtitle = "Built by BMCC students in the TTPR program — we are solving real challenges to empower learners and elevate student success.",
   members = defaultMembers,
   className,
 }) {
