@@ -144,10 +144,10 @@ export default function FlashcardPage() {
         <GradientBars colors={["#3c5899", "transparent"]} />
         <div className="relative z-20">
           <ThemeToggleButton />
-          <div className="flex justify-end">
-            <ShareButtonDemo />
-          </div>
           <div className="p-8 max-w-[800px] m-auto">
+            <div className="flex items-center justify-center mb-4">
+              <ShareButtonDemo />
+            </div>
             {/* Progress indicator */}
             <div className="text-center mb-8  font-[poppins]">
               Card {currentIndex + 1} of {data.length}
