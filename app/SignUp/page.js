@@ -1,4 +1,5 @@
 "use client";
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -17,6 +18,7 @@ import { validate } from "email-validator";
 import { Alert } from "@mui/material";
 import axios from "axios";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function Signup() {
   const [firstName, setFirstName] = useState("");
@@ -27,6 +29,8 @@ export default function Signup() {
   const [validation, setValidation] = useState(false);
   const [passwordErrors, setPasswordErrors] = useState([]);
   const [passwordStrength, setPasswordStrength] = useState(null);
+
+  const navigate = useRouter();
 
   const handleFirstNameChange = (event) => {
     setFirstName(event.target.value);
@@ -83,6 +87,10 @@ export default function Signup() {
       setValidation(true);
     }
 
+    if (!validate(email)) {
+      return; // show some error maybe
+    }
+
     try {
       const res = await axios.post(`http://localhost:8080/auth/signup`, {
         firstName,
@@ -91,6 +99,14 @@ export default function Signup() {
         email,
         password,
       });
+
+      // Show success alert
+      setValidation(true);
+
+      // Redirect after 2 seconds
+      setTimeout(() => {
+        navigate.push("/LogIn");
+      }, 1500);
     } catch (error) {
       console.error("error:", error);
     }
@@ -201,9 +217,11 @@ export default function Signup() {
               >
                 Sign Up
               </Button>
-              {validation ? (
-                <Alert severity="success">Signed up successfully</Alert>
-              ) : null}
+              {validation && (
+                <Alert severity="success" className="mb-4">
+                  Signed up successfully
+                </Alert>
+              )}
               {/* <Button variant="outline" className="w-full">
                 Sign Up with Google
               </Button> */}
