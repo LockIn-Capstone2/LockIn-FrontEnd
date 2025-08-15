@@ -107,3 +107,5 @@ function SavedSessions() {
     </div>
   );
 }
+
+export default SavedSessions;

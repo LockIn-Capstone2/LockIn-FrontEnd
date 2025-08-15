@@ -13,10 +13,17 @@ import {
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 function GradeCalculator() {
-  // State for the list of assignments
+  const router = useRouter();
+  // State for session title and the list of assignments
+  const [title, setTitle] = useState("");
   const [assignments, setAssignments] = useState([
     { assignment_type: "", assignment_name: "", grade: "", weight: "" },
   ]);
@@ -39,8 +46,16 @@ function GradeCalculator() {
 
   // Add a new blank assignment row
   const addAssignment = () => {
-    setAssignments([...assignments, {assignment_type: "", assignment_name: "", grade: "", weight: ""},
+    setAssignments([
+      ...assignments,
+      { assignment_type: "", assignment_name: "", grade: "", weight: "" },
     ]);
+  };
+
+  // Remove an assignment row
+  const removeAssignment = (index) => {
+    const updated = assignments.filter((_, i) => i !== index);
+    setAssignments(updated);
   };
 
   // Calculate final grade
@@ -56,7 +71,7 @@ function GradeCalculator() {
       return;
     }
 
-    // Calculate total worth if individual assignment
+    // Calculate total worth of individual assignment
     const total = assignments.reduce(
       (totals, currentAssignment) => {
         const grade = parseFloat(currentAssignment.grade);
@@ -72,98 +87,146 @@ function GradeCalculator() {
 
     // Display result or prompt user for valid inputs
     if (total.weightsum === 0) {
-        setFinalGrade("Please add valid grade and weight inputs");
+      setFinalGrade("Please add valid grade and weight inputs");
     } else {
-        setFinalGrade("${total.total.toFixed(2)}%");
+      setFinalGrade("${total.total.toFixed(2)}%");
     }
+  };
+
+  const handleSaveSession = () => {
+    // Check if title is empty or if there are no assignments defined
+    if (!title || assignments.length === 0) {
+      alert("Please provide a sesssion title and at least one assignment");
+      return;
+    }
+
+    // Get previously saved sessions from local storage. Use empty array if no saved sessions exist (note: reason for local storage is to develop MVP for saved sessions page)
+    const savedSessions =
+      JSON.parse(localStorage.getItem("savedSessions")) || [];
+    // add session to the list
+    savedSessions.push({ id: Date.now(), title, assignments });
+    localStorage.setItem("savedSessions", JSON.stringify(savedSessions));
+
+    // redirect to saved sessions page
+    router.push("/CalculatorSessions");
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-white">
-        <Card className="w-full max-w 4xl p-6">
-            <CardHeader>
-                <CardTitle>Grade Caclulator</CardTitle>
-                <CardDescription>
-                    Enter grades and weights to calculate your grade.
-                </CardDescription>
-            </CardHeader>
+      <Card className="w-full max-w 4xl p-6">
+        <CardHeader>
+          <CardTitle>Grade Caclulator</CardTitle>
+          <CardDescription>
+            Enter grades and weights to calculate your grade.
+          </CardDescription>
+        </CardHeader>
 
-            <CardContent className="space-y-4">
-                {/*Column headers */}
-                <div className="grid grid-cols-4 gap-4 font-bold">
-                    <span>Assignment Type</span>
-                    <span>Assignment Name</span>
-                    <span>Grade (%)</span>
-                    <span>Weight (%)</span>
-                </div>
+        <CardContent className="space-y-4">
+          <Input
+            type="text"
+            placeholder="Session Title (e.g., Math 101)"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
 
-                {/* Assignment rows */}
-                {assignments.map((assignments, index) => (
-                    <div key={index} className="grid grid-cols-4-gap-4">
-                        {/* Assignment type dropdown */}
-                        <select
-                            value = {assignments.assignment_type}
-                            onValueChange = {(value) =>
-                            handleChange(index, "assignment_type", value)
-                            }
-                        >
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select Type" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="Homework">Homework</SelectItem>
-                                <SelectItem value="Quiz">Quiz</SelectItem>
-                                <SelectItem value="Midterm">Midterm</SelectItem>
-                                <SelectItem value="Final">Final</SelectItem>
-                            </SelectContent>
-                        </select>
+          {/*Column headers */}
+          <div className="grid grid-cols-5 gap-4 font-bold">
+            <span>Assignment Type</span>
+            <span>Assignment Name</span>
+            <span>Grade (%)</span>
+            <span>Weight (%)</span>
+            {/* trash icon column */}
+            <span></span>
+          </div>
 
-                        {/* Assignment Name Input*/}
-                        <Input
-                        type="text"
-                        placeholder="Assignment Name"
-                        value={assignments.assignment_name}
-                        onChange={(e) => 
-                            handleChange(index, "assignment_name", e.target.value)
-                        }
-                        />
+          {/* Assignment rows */}
+          {assignments.map((assignments, index) => (
+            <div key={index} className="grid grid-cols-5-gap-4 items-center">
+              {/* Assignment type dropdown */}
+              <select
+                value={assignments.assignment_type}
+                onValueChange={(value) =>
+                  handleChange(index, "assignment_type", value)
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Homework">Homework</SelectItem>
+                  <SelectItem value="Quiz">Quiz</SelectItem>
+                  <SelectItem value="Midterm">Midterm</SelectItem>
+                  <SelectItem value="Final Exam">Final Exam</SelectItem>
+                </SelectContent>
+              </select>
 
-                        {/* Grade Input */}
-                        <Input
-                        type="number"
-                        placeholder="Grade (%)"
-                        value={assignments.grade}
-                        onChange={(e) =>
-                            handleChange(index, "grade", e.target.value)
-                        }
-                        />
+              {/* Assignment Name Input*/}
+              <Input
+                type="text"
+                placeholder="Assignment Name"
+                value={assignments.assignment_name}
+                onChange={(e) =>
+                  handleChange(index, "assignment_name", e.target.value)
+                }
+              />
 
-                        {/* Weight Input */}
-                        <Input
-                        type="number"
-                        placeholder="Weight (%)"
-                        value={assignments.weight}
-                        onChange={(e) =>
-                            handleChange(index, "weight", e.target.value)
-                    }
-                    />
-                    </div>
-                ))}
+              {/* Grade Input */}
+              <Input
+                type="number"
+                placeholder="Grade (%)"
+                value={assignments.grade}
+                onChange={(e) => handleChange(index, "grade", e.target.value)}
+              />
 
-                {/* Add another assignment button */}
-                <Button type="button" onClick={addAssignment}>
-                    Add Another
-                </Button>
-            </CardContent>
+              {/* Weight Input */}
+              <Input
+                type="number"
+                placeholder="Weight (%)"
+                value={assignments.weight}
+                onChange={(e) => handleChange(index, "weight", e.target.value)}
+              />
 
-            <CardFooter className="flex flex-col items-start gap-2">
-                <Button onClick={calculateGrade}>Calculate Grade</Button>
+              {/* Delete assignment button */}
+              <button
+                type="button"
+                onClick={() => removeAssignment(index)}
+                className="text-red-500 hover:text-red-700"
+              >
+                {/* trash icon */}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4m-4 0a1 1 0 00-1 1v1h6V4a1 1 0 00-1-1m-4 0h4"
+                  />
+                </svg>
+              </button>
+            </div>
+          ))}
 
-                {/* Display calculated final grade */}
-                {finalGrade && (<p className="text-lg font-bold">Final Grade: {finalGrade}</p>
-                )}
-            </CardFooter>
-        </Card>
+          {/* Add another assignment button */}
+          <Button type="button" onClick={addAssignment}>
+            Add Another
+          </Button>
+        </CardContent>
+
+        <CardFooter className="flex flex-col items-start gap-2">
+          <Button onClick={calculateGrade}>Calculate Grade</Button>
+          <Button onClick={handleSaveSession}>Save Session</Button>
+
+          {/* Display calculated final grade */}
+          {finalGrade && (
+            <p className="text-lg font-bold">Final Grade: {finalGrade}</p>
+          )}
+        </CardFooter>
+      </Card>
     </div>
   );
 }
