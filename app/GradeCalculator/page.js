@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 import {
   Card,
@@ -14,6 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
+  Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
@@ -82,14 +84,14 @@ function GradeCalculator() {
         }
         return totals;
       },
-      { total: 0, weightsum: 0 }
+      { total: 0, weightSum: 0 }
     );
 
     // Display result or prompt user for valid inputs
-    if (total.weightsum === 0) {
+    if (total.weightSum === 0) {
       setFinalGrade("Please add valid grade and weight inputs");
     } else {
-      setFinalGrade("${total.total.toFixed(2)}%");
+      setFinalGrade('${total.total.toFixed(2)}%');
     }
   };
 
@@ -143,9 +145,9 @@ function GradeCalculator() {
           {assignments.map((assignments, index) => (
             <div key={index} className="grid grid-cols-5-gap-4 items-center">
               {/* Assignment type dropdown */}
-              <select
+              <Select
                 value={assignments.assignment_type}
-                onValueChange={(value) =>
+                onValueChange={(value) =>-
                   handleChange(index, "assignment_type", value)
                 }
               >
@@ -158,7 +160,7 @@ function GradeCalculator() {
                   <SelectItem value="Midterm">Midterm</SelectItem>
                   <SelectItem value="Final Exam">Final Exam</SelectItem>
                 </SelectContent>
-              </select>
+              </Select>
 
               {/* Assignment Name Input*/}
               <Input

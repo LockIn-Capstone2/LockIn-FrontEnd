@@ -1,7 +1,5 @@
 import React from "react";
 
-import React from "react";
-
 export function Select({ value, onValueChange, children }) {
   return (
     <select
@@ -17,17 +15,17 @@ export function Select({ value, onValueChange, children }) {
 }
 
 // placeholder wrapper to open dropdown 
-export function SelectTrigger({ content }) {
+export function SelectTrigger({ children }) {
   return <>{children}</>;
 }
 
 // placeholder wrapper to display all dropdown options 
-export function SelectContent({items}) {
+export function SelectContent({ children }) {
     return <>{children}</>
 }
 
 // Select a single dropdown option
-export function SelectItem({ value, item }) {
+export function SelectItem({ value, children }) {
     return <option value={value}>{children}</option>;
 }
 
@@ -35,4 +33,3 @@ export function SelectItem({ value, item }) {
 export function SelectValue({ placeholder }) {
     return <option value="">{placeholder}</option>
 }
-

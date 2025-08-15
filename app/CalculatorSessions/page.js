@@ -18,7 +18,7 @@ function SavedSessions() {
 
   // Utilize local storage to load saved sessions
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem("savedSessions"));
+    const saved = JSON.parse(localStorage.getItem("savedSessions")) || [];
     setSessions(saved);
   }, []);
 
