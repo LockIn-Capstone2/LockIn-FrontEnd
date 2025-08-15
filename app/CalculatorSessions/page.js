@@ -22,3 +22,10 @@ function SavedSessions() {
     setSessions(saved);
   }, [])
 }
+
+// Function to delete a session via ID
+const handleDelete = (id) => {
+    // remove session from the session list
+    const updated = sessions.filter((session) => session.id !== id);
+    setSessions(updated);
+}
