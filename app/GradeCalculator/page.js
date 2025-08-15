@@ -14,7 +14,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Select } from "radix-ui";
 
 function GradeCalculator() {
   // State for the list of assignments
@@ -74,7 +73,8 @@ function GradeCalculator() {
     // Display result or prompt user for valid inputs
     if (total.weightsum === 0) {
         setFinalGrade("Please add valid grade and weight inputs");
-    } else {"{total.total}%"
+    } else {
+        setFinalGrade("${total.total.toFixed(2)}%");
     }
   };
 
@@ -83,6 +83,9 @@ function GradeCalculator() {
         <Card className="w-full max-w 4xl p-6">
             <CardHeader>
                 <CardTitle>Grade Caclulator</CardTitle>
+                <CardDescription>
+                    Enter grades and weights to calculate your grade.
+                </CardDescription>
             </CardHeader>
 
             <CardContent className="space-y-4">
@@ -97,7 +100,6 @@ function GradeCalculator() {
                 {/* Assignment rows */}
                 {assignments.map((assignments, index) => (
                     <div key={index} className="grid grid-cols-4-gap-4">
-
                         {/* Assignment type dropdown */}
                         <select
                             value = {assignments.assignment_type}
@@ -111,6 +113,7 @@ function GradeCalculator() {
                             <SelectContent>
                                 <SelectItem value="Homework">Homework</SelectItem>
                                 <SelectItem value="Quiz">Quiz</SelectItem>
+                                <SelectItem value="Midterm">Midterm</SelectItem>
                                 <SelectItem value="Final">Final</SelectItem>
                             </SelectContent>
                         </select>
@@ -157,8 +160,7 @@ function GradeCalculator() {
                 <Button onClick={calculateGrade}>Calculate Grade</Button>
 
                 {/* Display calculated final grade */}
-                {finalGrade && (
-                    <p className="text-lg font-bold">Final Grade: {finalGrade}</p>
+                {finalGrade && (<p className="text-lg font-bold">Final Grade: {finalGrade}</p>
                 )}
             </CardFooter>
         </Card>
