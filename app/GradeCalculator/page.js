@@ -91,7 +91,7 @@ function GradeCalculator() {
     if (total.weightSum === 0) {
       setFinalGrade("Please add valid grade and weight inputs");
     } else {
-      setFinalGrade('${total.total.toFixed(2)}%');
+      setFinalGrade(`${total.total.toFixed(2)}%`);
     }
   };
 
@@ -115,9 +115,9 @@ function GradeCalculator() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-white">
-      <Card className="w-full max-w 4xl p-6">
+      <Card className="w-full max-w-4xl p-6">
         <CardHeader>
-          <CardTitle>Grade Caclulator</CardTitle>
+          <CardTitle>Grade Calculator</CardTitle>
           <CardDescription>
             Enter grades and weights to calculate your grade.
           </CardDescription>
@@ -143,11 +143,11 @@ function GradeCalculator() {
 
           {/* Assignment rows */}
           {assignments.map((assignments, index) => (
-            <div key={index} className="grid grid-cols-5-gap-4 items-center">
+            <div key={index} className="grid grid-cols-5 gap-4 items-center">
               {/* Assignment type dropdown */}
               <CalculatorSelect
                 value={assignments.assignment_type}
-                onValueChange={(value) =>-
+                onValueChange={(value) =>
                   handleChange(index, "assignment_type", value)
                 }
               >
