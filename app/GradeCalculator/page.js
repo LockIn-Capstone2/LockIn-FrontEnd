@@ -15,12 +15,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/calculatorSelect";
+  CalculatorSelect,
+  CalculatorSelectTrigger,
+  CalculatorSelectContent,
+  CalculatorSelectItem,
+  CalculatorSelectValue,
+} from "@/components/ui/calculator-select";
 
 function GradeCalculator() {
   const router = useRouter();
@@ -145,22 +145,22 @@ function GradeCalculator() {
           {assignments.map((assignments, index) => (
             <div key={index} className="grid grid-cols-5-gap-4 items-center">
               {/* Assignment type dropdown */}
-              <Select
+              <CalculatorSelect
                 value={assignments.assignment_type}
                 onValueChange={(value) =>-
                   handleChange(index, "assignment_type", value)
                 }
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Homework">Homework</SelectItem>
-                  <SelectItem value="Quiz">Quiz</SelectItem>
-                  <SelectItem value="Midterm">Midterm</SelectItem>
-                  <SelectItem value="Final Exam">Final Exam</SelectItem>
-                </SelectContent>
-              </Select>
+                <CalculatorSelectTrigger>
+                  <CalculatorSelectValue placeholder="Select Type" />
+                </CalculatorSelectTrigger>
+                <CalculatorSelectContent>
+                  <CalculatorSelectItem value="Homework">Homework</CalculatorSelectItem>
+                  <CalculatorSelectItem value="Quiz">Quiz</CalculatorSelectItem>
+                  <CalculatorSelectItem value="Midterm">Midterm</CalculatorSelectItem>
+                  <CalculatorSelectItem value="Final Exam">Final Exam</CalculatorSelectItem>
+                </CalculatorSelectContent>
+              </CalculatorSelect>
 
               {/* Assignment Name Input*/}
               <Input
