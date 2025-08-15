@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import React, { useState, useEffect } from "react";
 import zxcvbn from "zxcvbn";
 import { validate } from "email-validator";
-import { Alert } from "@mui/material";
+import { Alert, Snackbar } from "@mui/material";
 import axios from "axios";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -29,6 +29,9 @@ export default function Signup() {
   const [validation, setValidation] = useState(false);
   const [passwordErrors, setPasswordErrors] = useState([]);
   const [passwordStrength, setPasswordStrength] = useState(null);
+  const [alertOpen, setAlertOpen] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertSeverity, setAlertSeverity] = useState("success");
 
   const navigate = useRouter();
 
@@ -87,10 +90,6 @@ export default function Signup() {
       setValidation(true);
     }
 
-    if (!validate(email)) {
-      return; // show some error maybe
-    }
-
     try {
       const res = await axios.post(`http://localhost:8080/auth/signup`, {
         firstName,
@@ -99,136 +98,150 @@ export default function Signup() {
         email,
         password,
       });
-
-      // Show success alert
-      setValidation(true);
+      setAlertMessage("Signed up successfully! Redirecting...");
+      setAlertSeverity("success");
+      setAlertOpen(true);
 
       // Redirect after 2 seconds
       setTimeout(() => {
         navigate.push("/LogIn");
       }, 1500);
     } catch (error) {
-      console.error("error:", error);
+      setAlertMessage(error?.response?.data?.message || "Sign-up failed");
+      setAlertSeverity("error");
+      setAlertOpen(true);
     }
   };
 
   return (
-    <div className="bg-[url('/Shapes.png')] bg-cover bg-center bg-no-repeat min-h-screen flex items-center justify-center bg-white">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle>Create an Account</CardTitle>
-          <CardDescription>
-            Enter your Info below to Create your account
-          </CardDescription>
-          <CardAction>
-            <Button variant="link">
-              <Link href="/LogIn">Log In</Link>
-            </Button>
-          </CardAction>
-        </CardHeader>
+    <>
+      <Snackbar
+        open={alertOpen}
+        autoHideDuration={3000}
+        onClose={() => setAlertOpen(false)}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setAlertOpen(false)}
+          severity={alertSeverity}
+          sx={{ width: "100%" }}
+        >
+          {alertMessage}
+        </Alert>
+      </Snackbar>
 
-        <CardContent>
-          <form onSubmit={handleSignUp}>
-            <div className="flex flex-col gap-6">
-              <div className="grid gap-2">
-                <Label htmlFor="firstname">First Name</Label>
-                <Input
-                  id="firstName"
-                  type="text"
-                  placeholder="John"
-                  required
-                  onChange={handleFirstNameChange}
-                  value={firstName}
-                />
-              </div>
+      <div className="bg-[url('/Shapes.png')] bg-cover bg-center bg-no-repeat min-h-screen flex items-center justify-center bg-white">
+        <Card className="w-full max-w-sm">
+          <CardHeader>
+            <CardTitle>Create an Account</CardTitle>
+            <CardDescription>
+              Enter your Info below to Create your account
+            </CardDescription>
+            <CardAction>
+              <Button variant="link">
+                <Link href="/LogIn">Log In</Link>
+              </Button>
+            </CardAction>
+          </CardHeader>
 
-              <div className="grid gap-2">
-                <Label htmlFor="lastname">Last Name</Label>
-                <Input
-                  id="lastname"
-                  type="text"
-                  placeholder="Doe"
-                  required
-                  onChange={handleLastNameChange}
-                  value={lastName}
-                />
-              </div>
+          <CardContent>
+            <form onSubmit={handleSignUp}>
+              <div className="flex flex-col gap-6">
+                <div className="grid gap-2">
+                  <Label htmlFor="firstname">First Name</Label>
+                  <Input
+                    id="firstName"
+                    type="text"
+                    placeholder="John"
+                    required
+                    onChange={handleFirstNameChange}
+                    value={firstName}
+                  />
+                </div>
 
-              <div className="grid gap-2">
-                <Label htmlFor="email">Username</Label>
-                <Input
-                  id="username"
-                  type="text"
-                  placeholder="tonysoprano12"
-                  required
-                  onChange={handleUsernameChange}
-                  value={username}
-                />
-              </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="lastname">Last Name</Label>
+                  <Input
+                    id="lastname"
+                    type="text"
+                    placeholder="Doe"
+                    required
+                    onChange={handleLastNameChange}
+                    value={lastName}
+                  />
+                </div>
 
-              <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="m@example.com"
-                  required
-                  onChange={handleEmailChange}
-                  value={email}
-                />
-              </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="email">Username</Label>
+                  <Input
+                    id="username"
+                    type="text"
+                    placeholder="tonysoprano12"
+                    required
+                    onChange={handleUsernameChange}
+                    value={username}
+                  />
+                </div>
 
-              <div className="grid gap-2">
-                <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
-                  {/* <a
+                <div className="grid gap-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="m@example.com"
+                    required
+                    onChange={handleEmailChange}
+                    value={email}
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <div className="flex items-center">
+                    <Label htmlFor="password">Password</Label>
+                    {/* <a
                     href="#"
                     className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-                  >
+                    >
                     Forgot your password?
-                  </a> */}
+                    </a> */}
+                  </div>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Enter a password: "
+                    required
+                    onChange={handlePasswordChange}
+                    value={password}
+                  />
                 </div>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Enter a password: "
-                  required
-                  onChange={handlePasswordChange}
-                  value={password}
-                />
-              </div>
-              {passwordStrength ? (
-                <div className="font-[poppins]">
-                  <div>{passwordStrengthBar(passwordStrength)}</div>
-                  {passwordStrength.feedback.suggestions.length ? (
-                    <p>
-                      Feedback:{" "}
-                      {passwordStrength.feedback.suggestions.join(", ")}
-                    </p>
-                  ) : null}
-                </div>
-              ) : null}
-              <Button
-                disabled={
-                  passwordErrors.length > 0 || passwordStrength?.score < 2
-                }
-                type="submit"
-                className="w-full"
-              >
-                Sign Up
-              </Button>
-              {validation && (
-                <Alert severity="success" className="mb-4">
-                  Signed up successfully
-                </Alert>
-              )}
-              {/* <Button variant="outline" className="w-full">
+                {passwordStrength ? (
+                  <div className="font-[poppins]">
+                    <div>{passwordStrengthBar(passwordStrength)}</div>
+                    {passwordStrength.feedback.suggestions.length ? (
+                      <p>
+                        Feedback:{" "}
+                        {passwordStrength.feedback.suggestions.join(", ")}
+                      </p>
+                    ) : null}
+                  </div>
+                ) : null}
+                <Button
+                  disabled={
+                    passwordErrors.length > 0 || passwordStrength?.score < 2
+                  }
+                  type="submit"
+                  className="w-full"
+                >
+                  Sign Up
+                </Button>
+                {/* <Button variant="outline" className="w-full">
                 Sign Up with Google
-              </Button> */}
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+                </Button> */}
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    </>
   );
 }
