@@ -42,6 +42,7 @@ return (
         {/* Search Input */}
         <Input
         type="text"
+        placeholder="Search by session title"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         className="mb-4 w-full max-w-lg"
@@ -55,7 +56,21 @@ return (
               <CardHeader>
                 <CardTitle>{session.title}</CardTitle>
               </CardHeader>
+
+              {/* Assignments within session card */}
+              <CardContent>
+                {session.assignments.map((a, i) => (
+                    <div key={i} className="flex gap-4">
+                        <span>{a.assignment_type}</span>
+                        <span>{a.assignment_name}</span>
+                        <span>{a.grade} %</span>
+                        <span>{a.weight}%</span>
+                    </div>
+                ))}
+              </CardContent>
               </div>
+
+            {/* Delete button and trash icon*/}
             <CardFooter>
               <button
                 type="button"
@@ -70,6 +85,7 @@ return (
           </Card>
         ))}
 
+        {/* Message to user when no sessions match their text search*/}
         {filteredSessions.length === 0 && (
           <p className="text-center text-gray-500">No sessions found.</p>
         )}
