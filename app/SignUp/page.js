@@ -110,6 +110,7 @@ export default function Signup() {
       setAlertMessage(error?.response?.data?.message || "Sign-up failed");
       setAlertSeverity("error");
       setAlertOpen(true);
+      console.error(error);
     }
   };
 
