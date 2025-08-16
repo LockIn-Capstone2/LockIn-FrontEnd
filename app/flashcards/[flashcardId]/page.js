@@ -20,8 +20,36 @@ export default function FlashcardPage() {
 
   const navigate = useRouter();
 
+  const startSession = async () => {
+    try {
+      await fetch("http://localhost:8080/api/sessions/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: 1 }),
+      });
+      console.log("Session started");
+    } catch (err) {
+      console.error("Failed to start session:", err);
+    }
+  };
+
+  const endSession = async () => {
+    try {
+      await fetch("http://localhost:8080/api/sessions/end", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: 1 }),
+      });
+      console.log("Session ended");
+    } catch (err) {
+      console.error("Failed to end session:", err);
+    }
+  };
+
   useEffect(() => {
     if (!flashcardId) return;
+
+    startSession();
 
     async function fetchData() {
       try {
@@ -61,6 +89,10 @@ export default function FlashcardPage() {
     }
 
     fetchData();
+
+    return () => {
+      endSession();
+    };
   }, [flashcardId]);
 
   const isFlashcard =
@@ -149,6 +181,7 @@ export default function FlashcardPage() {
               <ShareButtonDemo />
             </div>
             {/* Progress indicator */}
+
             <div className="text-center mb-8  font-[poppins]">
               Card {currentIndex + 1} of {data.length}
             </div>

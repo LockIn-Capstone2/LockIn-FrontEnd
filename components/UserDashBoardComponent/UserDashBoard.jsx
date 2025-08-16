@@ -9,6 +9,8 @@ import {
 } from "@tabler/icons-react";
 import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
+import StreakCounter from "../StreaksComponent";
+import ThemeToggleButton from "../ui/theme-toggle-button";
 
 export function SidebarDemo() {
   const links = [
@@ -56,6 +58,10 @@ export function SidebarDemo() {
           {/* Top Links */}
           <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto">
             <Logo />
+            <div className="mt-4 flex justify-center">
+              <ThemeToggleButton />
+            </div>
+
             <div className="mt-8 flex flex-col gap-2">
               {links.map((link, idx) => (
                 <SidebarLink key={idx} link={link} />
@@ -120,25 +126,30 @@ export const LogoIcon = () => {
 // Dummy dashboard component with content
 const Dashboard = () => {
   return (
-    <div className="flex flex-1 h-full">
+    <div className="flex flex-1">
       <div className="flex h-full w-full flex-1 flex-col gap-2 rounded-tl-2xl border border-neutral-200 bg-white p-2 md:p-10 dark:border-neutral-700 dark:bg-neutral-900">
-        {/* Top row */}
+        {/* Top row with StreakCounter */}
         <div className="flex gap-2">
-          {[...new Array(4)].map((_, idx) => (
+          <div className="h-20 w-full rounded-lg bg-gray-100 dark:bg-neutral-800 flex items-center justify-center">
+            <StreakCounter />
+          </div>
+
+          {/* Optional: keep extra empty cards to preserve spacing */}
+          {[...Array(3)].map((_, idx) => (
             <div
-              key={"first-array-demo-2" + idx}
-              className="h-20 w-full animate-pulse rounded-lg bg-gray-100 dark:bg-neutral-800"
-            />
+              key={"placeholder-top-" + idx}
+              className="h-20 w-full rounded-lg bg-gray-100 dark:bg-neutral-800"
+            ></div>
           ))}
         </div>
 
         {/* Bottom row */}
         <div className="flex flex-1 gap-2">
-          {[...new Array(2)].map((_, idx) => (
+          {[...Array(2)].map((_, idx) => (
             <div
-              key={"second-array-demo-2" + idx}
-              className="h-full w-full animate-pulse rounded-lg bg-gray-100 dark:bg-neutral-800"
-            />
+              key={"bottom-placeholder-" + idx}
+              className="h-full w-full rounded-lg bg-gray-100 dark:bg-neutral-800"
+            ></div>
           ))}
         </div>
       </div>
