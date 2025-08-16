@@ -92,7 +92,7 @@ export default function Signup() {
         password,
       });
     } catch (error) {
-      console.error("error:", error);
+      console.error(error);
     }
   };
 

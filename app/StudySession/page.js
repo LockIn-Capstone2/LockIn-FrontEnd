@@ -12,9 +12,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect, useRef } from "react";
+import axios from "axios";
 import React from "react";
 
 function StudyTimer() {
+  const userId = 2;
   const [hours, setHours] = useState("");
   const [minutes, setMinutes] = useState("");
   const [seconds, setSeconds] = useState("");
@@ -23,12 +25,8 @@ function StudyTimer() {
   const [isActive, setIsActive] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
+  const [timeDuration, setTimeDuration] = useState(0);
   const timerRef = useRef(null);
-
-  const handleHoursChange = (event) => {
-    const newValue = event.target.value;
-    setHours(newValue);
-  };
 
   const handleMinutesChange = (event) => {
     const newValue = event.target.value;
@@ -50,6 +48,7 @@ function StudyTimer() {
     const totalDuration = hour + minute + second;
 
     setTimeLeft(totalDuration);
+    setTimeDuration(totalDuration);
   };
 
   const formatTime = (totalDuration) => {
@@ -79,6 +78,36 @@ function StudyTimer() {
     }
   };
 
+  const formatTimeForDatabase = (totalDuration) => {
+    const hours = Math.floor(totalDuration / 3600);
+    const minutes = Math.floor((totalDuration % 3600) / 60);
+    const seconds = totalDuration % 60;
+
+    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
+      2,
+      "0"
+    )}:${String(seconds).padStart(2, "0")}`;
+  };
+
+  const sendTimeData = async (totalDuration) => {
+    const duration = formatTimeForDatabase(totalDuration);
+    try {
+      const response = await axios.post(
+        `http://localhost:8080/api/data/${userId}`,
+        {
+          duration: duration,
+        }
+      );
+    } catch (error) {
+      console.error("error", error);
+    }
+  };
+
+  const handleHoursChange = (event) => {
+    const newValue = event.target.value;
+    setHours(newValue);
+  };
+
   useEffect(() => {
     if (isActive && !isPaused) {
       timerRef.current = setInterval(() => {
@@ -97,6 +126,12 @@ function StudyTimer() {
     };
   }, [isActive, isPaused]);
 
+  useEffect(() => {
+    if (!timeLeft && isActive) {
+      sendTimeData(timeDuration);
+    }
+  });
+
   return (
     <>
       <div className="flex font-[poppins] bg-[#2D3142] text-[white] text-center rounded-xl h-8 items-center justify-center font-bold">
@@ -105,38 +140,37 @@ function StudyTimer() {
       <div className="flex items-center justify-center min-h-screen">
         <Card className="flex w-full max-w-sm bg-[#2D3142] border-none h-100">
           <CardHeader>
-            <CardTitle className="font-[poppins] text-[white] text-center">
+            <CardTitle className="font-[poppins] text-[white] text-center ml-auto">
               Study Timer
             </CardTitle>
-            <CardDescription></CardDescription>
-            <CardAction></CardAction>
           </CardHeader>
-          <CardContent className=" flex w-40 h-40 rounded-full aspect-square items-center justify-center ring-4 mx-auto ring-[#EEC0C8]">
+          <CardContent className=" flex w-40 h-40 rounded-full aspect-square items-center justify-center ring-4 mx-auto ring-[#EEC0C8] ">
             <div className="items-center justify-center font-[poppins] text-[white]">
               {formatTime(timeLeft)}
             </div>
           </CardContent>
-          <CardFooter className="flex-col gap-2">
+          <CardFooter className="flex-col gap-3">
             <button
               onClick={handleStart}
               disabled={isActive}
               type="submit"
-              className="rounded-lg bg-[#0D1321] text-[white] top-[5] right-[50] font-bold font-[poppins] text-center relative w-[65] hover:bg-green-500 transition-colors duration-300"
+              className="rounded-lg bg-[#0D1321] text-[white] top-[5] right-[50] font-bold font-[poppins] text-center relative w-[70px] hover:bg-green-500 transition-colors duration-300"
             >
               START
             </button>
             <button
               onClick={handlePause}
               type="submit"
-              className="rounded-lg bg-[#0D1321] text-[white] bottom-[27] left-[50] font-bold font-[poppins] text-center relative w-[65] hover:bg-red-500 transition-colors duration-300"
+              className="rounded-lg bg-[#0D1321] text-[white] bottom-[27] left-[50] font-bold font-[poppins] text-center relative w-[70px] hover:bg-red-500 transition-colors duration-300"
             >
               STOP
             </button>
+
             <div className="flex wrap space-x-5">
               <Input
                 type="number"
                 placeholder="HH"
-                className={"w-13 text-center"}
+                className={"w-12 text-center"}
                 onChange={handleHoursChange}
                 value={hours}
               ></Input>
@@ -146,7 +180,7 @@ function StudyTimer() {
               <Input
                 type="number"
                 placeholder="MM"
-                className={"w-14 text-center"}
+                className={"w-12 text-center"}
                 onChange={handleMinutesChange}
                 value={minutes}
               ></Input>
@@ -154,12 +188,12 @@ function StudyTimer() {
               <Input
                 type="number"
                 placeholder="SS"
-                className={"w-13 text-center"}
+                className={"w-11 text-center"}
                 onChange={handleSecondsChange}
                 value={seconds}
               ></Input>
               <div>
-                {!isActive ? (
+                {!isActive && !timeLeft ? (
                   <Button
                     onClick={handleSubmit}
                     className={
@@ -172,15 +206,6 @@ function StudyTimer() {
                   <> </>
                 )}
               </div>
-
-              {/* <Button
-                onClick={handleSubmit}
-                className={
-                  "hover:bg-[white]/200 transition-colors duration-300 hover:text-[black]/200"
-                }
-              >
-                Submit
-              </Button> */}
             </div>
           </CardFooter>
         </Card>
