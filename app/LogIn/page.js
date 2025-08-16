@@ -45,7 +45,7 @@ function LogIn() {
       setAlertOpen(true);
 
       setTimeout(() => {
-        navigate.push("/");
+        navigate.push("/DashBoard");
       }, 1500);
     } catch (error) {
       console.log("error", error.response);
