@@ -24,7 +24,8 @@ import {
 
 function GradeCalculator() {
   const router = useRouter();
-  // State for session title and the list of assignments
+
+  // States for session title and the list of assignments
   const [title, setTitle] = useState("");
   const [assignments, setAssignments] = useState([
     { assignment_type: "", assignment_name: "", grade: "", weight: "" },
@@ -35,11 +36,12 @@ function GradeCalculator() {
 
   // handle general changes to assignment fields
   const handleChange = (index, field, value) => {
-    // Ensure values between 0-100 for grade & weight
+    // Restrict values between 0-100 for grade & weight
     if (field === "grade" || field === "weight") {
       const num = Number(value);
       if (num < 0 || num > 100) return;
     }
+
     // Make a copy of the assignments, change the specific field in row, then update state
     const updated = [...assignments];
     updated[index][field] = value;
@@ -95,17 +97,19 @@ function GradeCalculator() {
     }
   };
 
+  // Save current session (total & calculated grade)
   const handleSaveSession = () => {
     // Check if title is empty or if there are no assignments defined
-    if (!title || assignments.length === 0) {
-      alert("Please provide a sesssion title and at least one assignment");
+    if (!title || !finalGrade) {
+      alert("Please calculate grade and provide a sesssion title before saving");
       return;
     }
 
     // Get previously saved sessions from local storage. Use empty array if no saved sessions exist (note: reason for local storage is to develop MVP for saved sessions page)
     const savedSessions =
       JSON.parse(localStorage.getItem("savedSessions")) || [];
-    // add session to the list
+
+    // add a new session to the list with a unique id
     savedSessions.push({ id: Date.now(), title, assignments });
     localStorage.setItem("savedSessions", JSON.stringify(savedSessions));
 
@@ -116,7 +120,7 @@ function GradeCalculator() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-white">
       <Card className="w-full max-w-4xl p-6">
-        <CardHeader>
+        <CardHeader className="text-center">
           <CardTitle>Grade Calculator</CardTitle>
           <CardDescription>
             Enter grades and weights to calculate your grade.
@@ -132,7 +136,7 @@ function GradeCalculator() {
           />
 
           {/*Column headers */}
-          <div className="grid grid-cols-5 gap-4 font-bold">
+          <div className="grid grid-cols-5 gap-4 font-bold text-center">
             <span>Assignment Type</span>
             <span>Assignment Name</span>
             <span>Grade (%)</span>
@@ -212,22 +216,22 @@ function GradeCalculator() {
               </button>
             </div>
           ))}
+        </CardContent>
 
-          {/* Add another assignment button */}
+        {/* Footer with action buttons */}
+        <CardFooter className="flex gap-4 justify-start flex-1">
           <Button type="button" onClick={addAssignment}>
             Add Another
           </Button>
-        </CardContent>
-
-        <CardFooter className="flex flex-col items-start gap-2">
           <Button onClick={calculateGrade}>Calculate Grade</Button>
           <Button onClick={handleSaveSession}>Save Session</Button>
-
-          {/* Display calculated final grade */}
-          {finalGrade && (
-            <p className="text-lg font-bold">Final Grade: {finalGrade}</p>
-          )}
+          <Button onClick={() => router.push("/CalculatorSessions")}>View Saved Sessions</Button>
         </CardFooter>
+
+          {/* Display calculated grade */}
+          {finalGrade && (
+            <p className="text-lg font-bold text-center mt-4">Final Grade: {finalGrade}</p>
+          )}
       </Card>
     </div>
   );
