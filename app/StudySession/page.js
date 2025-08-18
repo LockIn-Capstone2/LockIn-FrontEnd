@@ -14,9 +14,10 @@ import { Button } from "@/components/ui/button";
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import React from "react";
+import { Alert } from "@mui/material";
 
 function StudyTimer() {
-  const userId = 2;
+  const userId = 3;
   const [hours, setHours] = useState("");
   const [minutes, setMinutes] = useState("");
   const [seconds, setSeconds] = useState("");
@@ -130,7 +131,7 @@ function StudyTimer() {
     if (!timeLeft && isActive) {
       sendTimeData(timeDuration);
     }
-  });
+  }, [timeLeft, isActive]);
 
   return (
     <>
@@ -140,7 +141,7 @@ function StudyTimer() {
       <div className="flex items-center justify-center min-h-screen">
         <Card className="flex w-full max-w-sm bg-[#2D3142] border-none h-100">
           <CardHeader>
-            <CardTitle className="font-[poppins] text-[white] text-center ml-auto">
+            <CardTitle className="font-[poppins] text-[white] text-center">
               Study Timer
             </CardTitle>
           </CardHeader>
@@ -206,6 +207,11 @@ function StudyTimer() {
                   <> </>
                 )}
               </div>
+              {/* <div>
+                {!timeLeft ? (
+                  <Alert severity="success">Study session completed! </Alert>
+                ) : null}
+              </div> */}
             </div>
           </CardFooter>
         </Card>
