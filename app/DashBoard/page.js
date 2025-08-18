@@ -1,12 +1,7 @@
 import React from "react";
-import { SidebarDemo } from "@/components/UserDashBoardComponent/UserDashBoard";
 
 const UserDashBoard = () => {
-  return (
-    <div>
-      <SidebarDemo />
-    </div>
-  );
+  return <div>dashboard</div>;
 };
 
 export default UserDashBoard;
