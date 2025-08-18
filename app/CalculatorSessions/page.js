@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 import {
   Card,
   CardHeader,
@@ -19,10 +20,20 @@ function SavedSessions() {
   const [sessions, setSessions] = useState([]);
   const [search, setSearch] = useState("");
 
-  // Utilize local storage to load saved sessions
+  // axios call to fetch user's saved sessions
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem("savedSessions")) || [];
-    setSessions(saved);
+    const fetchSessions = async () => {
+      try {
+        const userId = 1;
+        const response = await axios.get(`/api/Calculator/grade-entries/${userId}`);
+        setSessions(response.data);
+      } catch (error) {
+        console.error("Error fetching saved sessions: ", error);
+        setSessions([]);
+      }
+    };
+
+    fetchSessions();
   }, []);
 
   // Function to delete a session via ID
