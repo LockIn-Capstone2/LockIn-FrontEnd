@@ -2,9 +2,7 @@
 import "./style.module.css";
 import {
   Card,
-  CardAction,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
@@ -41,7 +39,7 @@ function StudyTimer() {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    //this might be messy code
+
     const hour = (parseInt(hours) || 0) * 3600;
     const minute = (parseInt(minutes) || 0) * 60;
     const second = parseInt(seconds) || 0;
@@ -207,11 +205,11 @@ function StudyTimer() {
                   <> </>
                 )}
               </div>
-              {/* <div>
-                {!timeLeft ? (
-                  <Alert severity="success">Study session completed! </Alert>
-                ) : null}
-              </div> */}
+              {!timeLeft && isActive ? (
+                <Alert severity="success">Session completed</Alert>
+              ) : (
+                <></>
+              )}
             </div>
           </CardFooter>
         </Card>
