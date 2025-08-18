@@ -36,13 +36,23 @@ function SavedSessions() {
     fetchSessions();
   }, []);
 
-  // Function to delete a session via ID
-  const handleDelete = (id) => {
+  // axios function to delete a session via ID
+  const handleDelete = async (id) => {
+  try {
+    await axios.delete(`/api/Calculator/grade-entry/${id}`);
     // remove session from the session list
     const updated = sessions.filter((session) => session.id !== id);
     setSessions(updated);
-    localStorage.setItem("savedSessions", JSON.stringify(updated));
-  };
+  } catch (error) {
+    console.error("Error deleting session: ", error);
+    alert("Failed to delete session. Please try again.");
+  }
+};
+
+// handle edit by redirecting user to Grade Calculator via entry ID 
+const handleEdit = (id) => {
+  router.push(`/GradeCalculator?editId=$[id]`);
+};
 
   // Filter sessions based on user search text input (note: case-insensitive)
   const filteredSessions = sessions.filter((session) =>
@@ -87,7 +97,7 @@ function SavedSessions() {
 
             {/* Edit and Delete button via trash icon*/}
             <CardFooter className="flex gap-3">
-              <Button variant="outline">Edit</Button>
+              <Button variant="outline" onClick={() => handleEdit(session.id)}>Edit</Button>
 
               <button
                 type="button"

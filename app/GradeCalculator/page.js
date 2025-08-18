@@ -25,6 +25,8 @@ import {
 
 function GradeCalculator() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const editTitle = searchParams.get("editTitle");
 
   // States for session title and the list of assignments
   const [title, setTitle] = useState("");
@@ -34,6 +36,38 @@ function GradeCalculator() {
 
   // state to hold calculated final grade
   const [finalGrade, setFinalGrade] = useState(null);
+
+  // fetch assignments for editing if editTitle is present
+  useEffect(() => {
+    if (editTitle) {
+      const fetchSessionAssignments = async () => {
+        try {
+          const userId = 1; // hardcoded for now
+          const response = await axios.get(`/api/Calculator/grade-entries/${userId}`);
+          // filter assignments matching this session title
+          const sessionAssignments = response.data.filter(
+            (a) => a.session_title === editTitle
+          );
+          if (sessionAssignments.length) {
+            setTitle(editTitle);
+            // map assignments and include `id` for PUT updates
+            setAssignments(
+              sessionAssignments.map((a) => ({
+                id: a.id,
+                assignment_type: a.assignment_type,
+                assignment_name: a.assignment_name,
+                grade: a.assignment_grade,
+                weight: a.assignment_weight,
+              }))
+            );
+          }
+        } catch (error) {
+          console.error("Error fetching session for edit:", error);
+        }
+      };
+      fetchSessionAssignments();
+    }
+  }, [editTitle]);
 
   // handle general changes to assignment fields
   const handleChange = (index, field, value) => {
@@ -107,16 +141,23 @@ function GradeCalculator() {
     }
 
     try {
-      // POST axios call to new-grade-entry
       for (let assignment of assignments) {
-        await axios.post("/api/Calculator/new-grade-entry", {
-          user_id: 1,
-          assignment_type: assignment.assignment_type,
-          assignment_name: assignment.assignment_name,
-          assignment_grade: assignment.grade,
-          assignment_weight: assignment.weight,
-        });
-       }
+        if (assignment.id) {
+          await axios.put(`/api/Calculator/grade-entry/${editId}`, {
+            assignment_grade: assignment.grade,
+            assignment_weight: assignment.weight,
+          });
+        } else {
+          // POST axios call to new-grade-entry. "If not editing, then create new session
+            await axios.post("/api/Calculator/new-grade-entry", {
+              user_id: 1,
+              assignment_type: assignment.assignment_type,
+              assignment_name: assignment.assignment_name,
+              assignment_grade: assignment.grade,
+              assignment_weight: assignment.weight,
+            });
+          }
+        }
 
        // After saving to db, redirect user to saved sessions page
        router.push("/CalculatorSessions");
@@ -124,7 +165,7 @@ function GradeCalculator() {
         console.error("Error saving grade entry: ", error);
         alert("Failed to save session. Please try again.");
       }
-  };
+    };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-white">
