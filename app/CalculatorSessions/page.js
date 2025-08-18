@@ -10,8 +10,11 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 function SavedSessions() {
+  const router = useRouter();
+
   // State to store all saved sessions and user search text
   const [sessions, setSessions] = useState([]);
   const [search, setSearch] = useState("");
@@ -27,6 +30,7 @@ function SavedSessions() {
     // remove session from the session list
     const updated = sessions.filter((session) => session.id !== id);
     setSessions(updated);
+    localStorage.setItem("savedSessions", JSON.stringify(updated));
   };
 
   // Filter sessions based on user search text input (note: case-insensitive)
@@ -36,8 +40,11 @@ function SavedSessions() {
 
   return (
     <div className="min-h-screen flex flex-col items-center bg-white p-6">
-      {/* Page Title*/}
-      <h1 className="text-2xl font-bold mb-4">Saved Sessions</h1>
+      {/* Page Title and "Save Session" button aligned right*/}
+      <div className= "relative w-full max-w-4xl mb-4 h-10 flex items-center">
+        <h1 className="absolute left-1/2 -translate-x-1/2 text-2xl font-bold">Saved Sessions</h1>
+        <Button className="ml-auto" onClick={() => router.push("/GradeCalculator")}>New Session</Button>
+      </div>
 
       {/* Search Input */}
       <Input
@@ -59,22 +66,18 @@ function SavedSessions() {
               <CardHeader>
                 <CardTitle>{session.title}</CardTitle>
               </CardHeader>
-
-              {/* Assignments within session card */}
-              <CardContent>
-                {session.assignments.map((a, i) => (
-                  <div key={i} className="flex gap-4">
-                    <span>{a.assignment_type}</span>
-                    <span>{a.assignment_name}</span>
-                    <span>{a.grade} %</span>
-                    <span>{a.weight}%</span>
-                  </div>
-                ))}
-              </CardContent>
+              {/* Show calculated grade within session card*/}
+              {session.finalGrade && (
+                <p className="text-sm font-semibold">
+                  Final Grade: {session.finalGrade}
+                </p>
+              )}
             </div>
 
-            {/* Delete button and trash icon*/}
-            <CardFooter>
+            {/* Edit and Delete button via trash icon*/}
+            <CardFooter className="flex gap-3">
+              <Button variant="outline">Edit</Button>
+
               <button
                 type="button"
                 onClick={() => handleDelete(session.id)}
