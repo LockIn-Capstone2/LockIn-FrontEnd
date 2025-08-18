@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import axios from "axios"
 import { useRouter } from "next/navigation";
 
 import {
@@ -98,23 +99,31 @@ function GradeCalculator() {
   };
 
   // Save current session (total & calculated grade)
-  const handleSaveSession = () => {
+  const handleSaveSession = async () => {
     // Check if title is empty or if there are no assignments defined
     if (!title || !finalGrade) {
       alert("Please calculate grade and provide a sesssion title before saving");
       return;
     }
 
-    // Get previously saved sessions from local storage. Use empty array if no saved sessions exist (note: reason for local storage is to develop MVP for saved sessions page)
-    const savedSessions =
-      JSON.parse(localStorage.getItem("savedSessions")) || [];
+    try {
+      // POST axios call to new-grade-entry
+      for (let assignment of assignments) {
+        await axios.post("/api/Calculator/new-grade-entry", {
+          user_id: 1,
+          assignment_type: assignment.assignment_type,
+          assignment_name: assignment.assignment_name,
+          assignment_grade: assignment.grade,
+          assignment_weight: assignment.weight,
+        });
+       }
 
-    // add a new session to the list with a unique id
-    savedSessions.push({ id: Date.now(), title, assignments });
-    localStorage.setItem("savedSessions", JSON.stringify(savedSessions));
-
-    // redirect to saved sessions page
-    router.push("/CalculatorSessions");
+       // After saving to db, redirect user to saved sessions page
+       router.push("/CalculatorSessions");
+      } catch(error) {
+        console.error("Error saving grade entry: ", error);
+        alert("Failed to save session. Please try again.");
+      }
   };
 
   return (
