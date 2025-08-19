@@ -262,9 +262,16 @@ export default function Signup() {
                   Signed up successfully! Redirecting...
                 </Alert>
               )}
-              {/* <Button variant="outline" className="w-full">
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() =>
+                  (window.location.href = "http://localhost:8080/auth/google")
+                }
+                type="button"
+              >
                 Sign Up with Google
-              </Button> */}
+              </Button>
             </div>
           </form>
         </CardContent>

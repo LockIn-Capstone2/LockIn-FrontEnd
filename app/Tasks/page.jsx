@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Calendar } from "@/components/ui/calender";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
@@ -14,16 +14,24 @@ import {
   DropdownMenuItem
 } from "@/components/ui/dropdown-menu";
 import api from "@/utils/api";
+import CalendarService from "@/utils/calendarService";
+import { CalendarNotification } from "@/components/CalendarNotification";
 import "./tasks.css";
 
 export default function TasksPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [tasks, setTasks] = useState([]);
   const [tasksLoading, setTasksLoading] = useState(true);
   const [error, setError] = useState("");
   const [showNewRow, setShowNewRow] = useState(false);
   const [editTask, setEditTask] = useState(null);
+  // Calendar integration state
+  const [calendarEnabled, setCalendarEnabled] = useState(false);
+  const [calendarPermissions, setCalendarPermissions] = useState(false);
+  const [showCalendarNotification, setShowCalendarNotification] = useState(true);
+  
   const [newTask, setNewTask] = useState({
     className: "",
     assignment: "",
@@ -31,6 +39,8 @@ export default function TasksPage() {
     status: "pending", // Match ENUM exactly
     deadline: "",
     priority: "medium",
+    // Add calendar reminder option
+    createReminder: true,
   });
   // Filter states
   const [filterClassName, setFilterClassName] = useState("");
@@ -51,8 +61,38 @@ export default function TasksPage() {
   useEffect(() => {
     if (user) {
       fetchTasks();
+      checkCalendarPermissions();
     }
   }, [user]);
+
+  // Handle calendar success parameter from OAuth redirect
+  useEffect(() => {
+    const calendarSuccess = searchParams.get('calendar_success');
+    
+    if (calendarSuccess === 'permissions_granted') {
+      // Show success message
+      alert('✅ Google Calendar connected successfully! You can now create calendar reminders for your tasks.');
+      
+      // Clear the URL parameter
+      const url = new URL(window.location);
+      url.searchParams.delete('calendar_success');
+      window.history.replaceState({}, document.title, url.pathname);
+      
+      // Refresh calendar permissions
+      checkCalendarPermissions();
+    }
+  }, [searchParams]);
+
+  // Check if user has granted calendar permissions
+  const checkCalendarPermissions = async () => {
+    try {
+      const hasPermissions = await CalendarService.checkCalendarPermissions();
+      setCalendarPermissions(hasPermissions);
+      setCalendarEnabled(hasPermissions);
+    } catch (error) {
+      console.log("Calendar permissions check failed:", error);
+    }
+  };
 
   const fetchTasks = async () => {
     try {
@@ -61,7 +101,6 @@ export default function TasksPage() {
       setTasks(response.data);
     } catch (error) {
       console.error("Error fetching tasks:", error);
-      console.error("Error details:", error.response?.data);
       setError('Failed to load tasks');
     } finally {
       setTasksLoading(false);
@@ -70,6 +109,18 @@ export default function TasksPage() {
 
   const handleDelete = async (taskId) => {
     try {
+      const taskToDelete = tasks.find(task => task.id === taskId);
+      
+      // Delete calendar reminder if it exists and user has permissions
+      if (calendarEnabled && calendarPermissions && taskToDelete?.calendarEventId) {
+        try {
+          await CalendarService.deleteTaskReminder(taskToDelete);
+          console.log("Calendar reminder deleted");
+        } catch (calendarError) {
+          console.error("Failed to delete calendar reminder:", calendarError);
+        }
+      }
+      
       await api.delete(`/api/tasks/${taskId}`);
       setTasks(tasks.filter(task => task.id !== taskId));
     } catch (error) {
@@ -81,7 +132,43 @@ export default function TasksPage() {
   const handleAddTask = async () => {
     try {
       const response = await api.post('/api/tasks', newTask);
-      setTasks([...tasks, response.data]);
+      const createdTask = response.data;
+      
+      // Create calendar reminder if enabled, permissions granted, and deadline is set
+      if (calendarEnabled && 
+          calendarPermissions && 
+          newTask.createReminder && 
+          newTask.deadline && 
+          newTask.deadline.trim() !== "" && 
+          createdTask.deadline && 
+          createdTask.deadline.trim() !== "") {
+        try {
+          console.log('Creating calendar reminder for task:', createdTask);
+          const calendarEvent = await CalendarService.createTaskReminder(createdTask);
+          console.log("Calendar reminder created:", calendarEvent);
+        } catch (calendarError) {
+          console.error("Failed to create calendar reminder:", calendarError);
+          
+          // Show detailed error for debugging
+          const errorDetails = calendarError.response ? 
+            `Status: ${calendarError.response.status}, Message: ${calendarError.response.data?.error || calendarError.message}` :
+            calendarError.message;
+          
+          // Show user-friendly message for calendar errors
+          if (calendarError.message.includes("temporarily unavailable")) {
+            setError(`Task created successfully, but calendar reminder failed. Backend Error: ${errorDetails}`);
+          } else if (calendarError.message.includes("not available")) {
+            console.log("Calendar API not available - continuing without reminder");
+          } else {
+            setError(`Task created successfully, but calendar reminder failed. Error: ${errorDetails}`);
+          }
+          
+          // Clear error after 10 seconds for debugging
+          setTimeout(() => setError(""), 10000);
+        }
+      }
+      
+      setTasks([...tasks, createdTask]);
       setShowNewRow(false);
       setNewTask({
         className: "",
@@ -90,6 +177,7 @@ export default function TasksPage() {
         status: "pending",
         deadline: "",
         priority: "medium",
+        createReminder: true,
       });
     } catch (error) {
       console.error("Error adding task:", error);
@@ -105,7 +193,19 @@ export default function TasksPage() {
   const handleEditTask = async () => {
     try {
       const response = await api.put(`/api/tasks/${editTask.id}`, editTask);
-      setTasks(tasks.map(task => task.id === editTask.id ? response.data : task));
+      const updatedTask = response.data;
+      
+      // Update calendar reminder if task has one, deadline changed, and user has permissions
+      if (calendarEnabled && calendarPermissions && updatedTask.calendarEventId && editTask.deadline) {
+        try {
+          await CalendarService.updateTaskReminder(updatedTask);
+          console.log("Calendar reminder updated");
+        } catch (calendarError) {
+          console.error("Failed to update calendar reminder:", calendarError);
+        }
+      }
+      
+      setTasks(tasks.map(task => task.id === editTask.id ? updatedTask : task));
       setEditTask(null);
     } catch (error) {
       console.error("Error editing task:", error);
@@ -153,6 +253,35 @@ export default function TasksPage() {
       
       <div className="mb-4 p-4 bg-gray-100 rounded-lg">
         <p className="text-sm text-gray-600">Welcome back, <strong>{user.username}</strong>!</p>
+        
+        {/* Calendar Integration Status */}
+        <div className="mt-2 flex items-center gap-2">
+          {calendarPermissions ? (
+            <div className="flex items-center gap-2">
+              <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                📅 Google Calendar Connected
+              </span>
+              <label className="flex items-center gap-1 text-xs">
+                <input
+                  type="checkbox"
+                  checked={calendarEnabled}
+                  onChange={(e) => setCalendarEnabled(e.target.checked)}
+                  className="w-3 h-3"
+                />
+                Auto-create reminders
+              </label>
+            </div>
+          ) : (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => CalendarService.requestCalendarPermissions()}
+              className="text-xs"
+            >
+              🔗 Connect Google Calendar for Reminders
+            </Button>
+          )}
+        </div>
       </div>
       
       {error && (
@@ -165,6 +294,11 @@ export default function TasksPage() {
             ×
           </button>
         </div>
+      )}
+
+      {/* Calendar Integration Notification */}
+      {showCalendarNotification && !calendarPermissions && (
+        <CalendarNotification onDismiss={() => setShowCalendarNotification(false)} />
       )}
 
       {/* Filter UI */}
@@ -272,7 +406,11 @@ export default function TasksPage() {
                               selected={editTask.deadline ? new Date(editTask.deadline) : undefined}
                               captionLayout="dropdown"
                               onSelect={(date) => {
-                                setEditTask({ ...editTask, deadline: date ? date.toISOString().split("T")[0] : "" });
+                                // Set deadline to end of day (11:59 PM) to make it clear this is a full-day deadline
+                                const deadlineWithTime = date ? 
+                                  new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59).toISOString() : 
+                                  "";
+                                setEditTask({ ...editTask, deadline: deadlineWithTime });
                                 setEditCalendarOpen(false);
                               }}
                             />
@@ -309,7 +447,14 @@ export default function TasksPage() {
                           {task.status}
                         </span>
                       </td>
-                      <td>{task.deadline ? new Date(task.deadline).toLocaleDateString() : "No deadline"}</td>
+                      <td>
+                        <div className="flex items-center gap-1">
+                          {task.deadline ? new Date(task.deadline).toLocaleDateString() : "No deadline"}
+                          {task.calendarEventId && (
+                            <span title="Calendar reminder set">📅</span>
+                          )}
+                        </div>
+                      </td>
                       <td>
                         <span className={`priority-badge priority-${task.priority}`}>
                           {task.priority}
@@ -383,7 +528,11 @@ export default function TasksPage() {
                             selected={newTask.deadline ? new Date(newTask.deadline) : undefined}
                             captionLayout="dropdown"
                             onSelect={(date) => {
-                              setNewTask({ ...newTask, deadline: date ? date.toISOString().split("T")[0] : "" });
+                              // Set deadline to end of day (11:59 PM) to make it clear this is a full-day deadline
+                              const deadlineWithTime = date ? 
+                                new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59).toISOString() : 
+                                "";
+                              setNewTask({ ...newTask, deadline: deadlineWithTime });
                               setCalendarOpen(false);
                             }}
                           />
@@ -406,8 +555,23 @@ export default function TasksPage() {
                       </DropdownMenu>
                     </td>
                     <td className="task-actions">
-                      <button onClick={handleAddTask}>Add</button>
-                      <button onClick={() => setShowNewRow(false)}>Cancel</button>
+                      <div className="flex flex-col gap-2">
+                        {calendarEnabled && newTask.deadline && (
+                          <label className="flex items-center gap-1 text-xs">
+                            <input
+                              type="checkbox"
+                              checked={newTask.createReminder}
+                              onChange={(e) => setNewTask({ ...newTask, createReminder: e.target.checked })}
+                              className="w-3 h-3"
+                            />
+                            📅 Reminder
+                          </label>
+                        )}
+                        <div className="flex gap-1">
+                          <button onClick={handleAddTask}>Add</button>
+                          <button onClick={() => setShowNewRow(false)}>Cancel</button>
+                        </div>
+                      </div>
                     </td>
                   </tr>
                 )}

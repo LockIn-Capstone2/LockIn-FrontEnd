@@ -62,6 +62,11 @@ function LogIn() {
     }
   };
 
+  const handleGoogleLogin = () => {
+    // Redirect to backend Google OAuth
+    window.location.href = `http://localhost:8080/auth/google`;
+  };
+
   return (
     <div className="bg-[url('/Shapes.png')] bg-cover bg-center bg-no-repeat min-h-screen flex items-center justify-center bg-white">
       <Card className="w-full max-w-sm">
@@ -113,7 +118,12 @@ function LogIn() {
                 {loading ? "Logging in..." : "Login"}
               </Button>
               {error && <Alert severity="error">{error}</Alert>}
-              <Button variant="outline" className="w-full">
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={handleGoogleLogin}
+                type="button"
+              >
                 Login with Google
               </Button>
             </div>
