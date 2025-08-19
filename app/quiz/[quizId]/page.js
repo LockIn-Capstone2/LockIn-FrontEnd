@@ -8,6 +8,9 @@ import { Hourglass } from "ldrs/react";
 import "ldrs/react/Hourglass.css";
 import { GradientBars } from "@/components/ui/gradient-bars";
 
+// Get API base URL from environment variables
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
+
 export default function QuizPage() {
   const { quizId } = useParams();
 
@@ -32,12 +35,9 @@ export default function QuizPage() {
   useEffect(() => {
     const getCurrentUser = async () => {
       try {
-        const response = await fetch(
-          "http://localhost:8080/api/progress/current-user",
-          {
-            credentials: "include",
-          }
-        );
+        const response = await fetch(`${API_BASE}/progress/current-user`, {
+          credentials: "include",
+        });
 
         if (!response.ok) {
           if (response.status === 401) {
@@ -73,21 +73,18 @@ export default function QuizPage() {
     try {
       const duration = Date.now() - startTime;
 
-      const response = await fetch(
-        "http://localhost:8080/api/progress/quiz-progress",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({
-            // Remove user_id - it's now extracted from JWT token
-            ai_chat_history_id: quizId,
-            score: finalScore,
-            duration_ms: duration,
-            session_id: sessionId,
-          }),
-        }
-      );
+      const response = await fetch(`${API_BASE}/progress/quiz-progress`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          // Remove user_id - it's now extracted from JWT token
+          ai_chat_history_id: quizId,
+          score: finalScore,
+          duration_ms: duration,
+          session_id: sessionId,
+        }),
+      });
 
       if (!response.ok) {
         throw new Error(`Failed to record quiz progress: ${response.status}`);
@@ -107,12 +104,9 @@ export default function QuizPage() {
         setLoading(true);
         setError(null);
 
-        const res = await fetch(
-          `http://localhost:8080/api/chat/quiz/${quizId}`,
-          {
-            credentials: "include",
-          }
-        );
+        const res = await fetch(`${API_BASE}/chat/quiz/${quizId}`, {
+          credentials: "include",
+        });
 
         if (!res.ok) {
           throw new Error(`HTTP ${res.status}: ${res.statusText}`);
