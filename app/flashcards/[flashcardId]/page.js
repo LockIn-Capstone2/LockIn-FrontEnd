@@ -17,8 +17,36 @@ export default function FlashcardPage() {
   const [responseType, setResponseType] = useState(null);
   const [showAnswer, setShowAnswer] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [sessionId] = useState(`session_${Date.now()}`); // Unique session ID
+  const [startTime] = useState(Date.now()); // Track session start time
 
   const navigate = useRouter();
+
+  // Progress tracking function
+  const recordProgress = async (cardIndex, isCorrect) => {
+    try {
+      const duration = Date.now() - startTime;
+
+      await fetch("http://localhost:8080/api/progress/flashcard-progress", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: 1, // Replace with actual user ID from auth
+          ai_chat_history_id: flashcardId,
+          card_index: cardIndex,
+          is_correct: isCorrect,
+          duration_ms: duration,
+          session_id: sessionId,
+        }),
+      });
+
+      console.log(
+        `Progress recorded: Card ${cardIndex}, Correct: ${isCorrect}`
+      );
+    } catch (error) {
+      console.error("Failed to record progress:", error);
+    }
+  };
 
   const startSession = async () => {
     try {
@@ -128,6 +156,17 @@ export default function FlashcardPage() {
     }
   };
 
+  // Handle flashcard answer (correct/incorrect)
+  const handleFlashcardAnswer = async (isCorrect) => {
+    // Record progress for the current card
+    await recordProgress(currentIndex, isCorrect);
+
+    // You could add UI feedback here
+    console.log(
+      `Card ${currentIndex + 1}: ${isCorrect ? "Correct" : "Incorrect"}`
+    );
+  };
+
   if (loading) {
     return (
       <div className="p-8 text-center">
@@ -180,9 +219,9 @@ export default function FlashcardPage() {
             <div className="flex items-center justify-center mb-4">
               <ShareButtonDemo />
             </div>
-            {/* Progress indicator */}
 
-            <div className="text-center mb-8  font-[poppins]">
+            {/* Progress indicator */}
+            <div className="text-center mb-8 font-[poppins]">
               Card {currentIndex + 1} of {data.length}
             </div>
 
@@ -191,21 +230,21 @@ export default function FlashcardPage() {
               {!showAnswer ? (
                 <div>
                   <h2 className="text-2xl mb-4 font-[poppins]">Question</h2>
-                  <p className="text-lg  font-[poppins]">{frontText}</p>
+                  <p className="text-lg font-[poppins]">{frontText}</p>
                 </div>
               ) : (
                 <div>
-                  <h2 className="text-2xl  mb-4 font-[poppins]">Answer</h2>
-                  <p className="text-lg  font-[poppins]">{backText}</p>
+                  <h2 className="text-2xl mb-4 font-[poppins]">Answer</h2>
+                  <p className="text-lg font-[poppins]">{backText}</p>
                 </div>
               )}
             </div>
 
             {/* Metadata */}
             {(current.difficulty || current.cognitive_skill) && (
-              <div className="text-center mb-8 p-4  rounded-[8px]">
+              <div className="text-center mb-8 p-4 rounded-[8px]">
                 {current.difficulty && (
-                  <span className="mr-4 ">
+                  <span className="mr-4">
                     Difficulty: <strong>{current.difficulty}</strong>
                   </span>
                 )}
@@ -214,6 +253,24 @@ export default function FlashcardPage() {
                     Skill: <strong>{current.cognitive_skill}</strong>
                   </span>
                 )}
+              </div>
+            )}
+
+            {/* Answer buttons - only show when answer is visible */}
+            {showAnswer && (
+              <div className="flex justify-center gap-4 mb-6">
+                <button
+                  onClick={() => handleFlashcardAnswer(false)}
+                  className="py-3 px-6 text-lg bg-red-500 text-white border-none rounded-[8px] cursor-pointer hover:bg-red-600 transition-colors"
+                >
+                  ❌ Incorrect
+                </button>
+                <button
+                  onClick={() => handleFlashcardAnswer(true)}
+                  className="py-3 px-6 text-lg bg-green-500 text-white border-none rounded-[8px] cursor-pointer hover:bg-green-600 transition-colors"
+                >
+                  ✅ Correct
+                </button>
               </div>
             )}
 
@@ -253,9 +310,6 @@ export default function FlashcardPage() {
       <div className="text-[1rem] font-[poppins]">
         The content couldn&apos;t be displayed as a quiz or flashcards
       </div>
-      {/* <pre className="mt-4 p-4 bg-[#f5f5f5] rounded-[8px] overflow-auto text-[0.8rem]">
-        {JSON.stringify(data, null, 2)}
-      </pre> */}
     </div>
   );
 }
