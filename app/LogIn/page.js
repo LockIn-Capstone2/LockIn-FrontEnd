@@ -10,13 +10,21 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import axios from "axios";
+import { Alert } from "@mui/material";
+import api from "@/utils/api";
+import { useAuth } from "@/contexts/AuthContext";
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 function LogIn() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const router = useRouter();
+  const { checkAuthStatus } = useAuth();
 
   const handleUsernameChange = (event) => {
     setUsername(event.target.value);
@@ -28,13 +36,29 @@ function LogIn() {
 
   const handleLogin = async (event) => {
     event.preventDefault();
+    setLoading(true);
+    setError("");
+
     try {
-      const response = await axios.post(`http://localhost:8080/auth/login`, {
+      const response = await api.post("/auth/login", {
         username,
         password,
       });
+
+      console.log("Login successful:", response.data);
+
+      // Update auth context
+      await checkAuthStatus();
+
+      // Redirect to dashboard
+      router.push("/");
     } catch (error) {
-      console.log("error", error.response);
+      console.error("Login error:", error);
+      setError(
+        error.response?.data?.error || "Login failed. Please try again."
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -85,9 +109,10 @@ function LogIn() {
                   onChange={handlePasswordChange}
                 />
               </div>
-              <Button type="submit" className="w-full">
-                Login
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Logging in..." : "Login"}
               </Button>
+              {error && <Alert severity="error">{error}</Alert>}
               <Button variant="outline" className="w-full">
                 Login with Google
               </Button>

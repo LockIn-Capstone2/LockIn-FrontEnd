@@ -12,10 +12,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import zxcvbn from "zxcvbn";
 import { validate } from "email-validator";
 import { Alert } from "@mui/material";
-import axios from "axios";
+import api from "@/utils/api";
+import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
 
 export default function Signup() {
@@ -25,8 +27,13 @@ export default function Signup() {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [validation, setValidation] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const [passwordErrors, setPasswordErrors] = useState([]);
   const [passwordStrength, setPasswordStrength] = useState(null);
+
+  const router = useRouter();
+  const { checkAuthStatus } = useAuth();
 
   const handleFirstNameChange = (event) => {
     setFirstName(event.target.value);
@@ -79,20 +86,66 @@ export default function Signup() {
 
   const handleSignUp = async (event) => {
     event.preventDefault();
-    if (validate(email)) {
-      setValidation(true);
+    setLoading(true);
+    setError("");
+    setValidation(false);
+
+    // Validate email
+    if (!validate(email)) {
+      setError("Please enter a valid email address");
+      setLoading(false);
+      return;
     }
 
+    // Validate password strength
+    if (passwordErrors.length > 0 || passwordStrength?.score < 2) {
+      setError("Please choose a stronger password");
+      setLoading(false);
+      return;
+    }
+
+    console.log("📝 Starting signup process...");
+    console.log("🔍 Signup data:", {
+      firstName,
+      lastName,
+      username,
+      email,
+      password: "***",
+    });
+
     try {
-      const res = await axios.post(`http://localhost:8080/auth/signup`, {
+      console.log("🌐 Making signup request to backend...");
+      const response = await api.post("/auth/signup", {
         firstName,
         lastName,
         username,
         email,
         password,
       });
+
+      console.log("✅ Signup successful:", response.data);
+      setValidation(true);
+
+      // Update auth context
+      await checkAuthStatus();
+
+      // Redirect to dashboard after a brief delay to show success message
+      setTimeout(() => {
+        router.push("/");
+      }, 1500);
     } catch (error) {
-      console.error("error:", error);
+      console.error("❌ Signup error:", error);
+      console.error("🔍 Error details:", {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+        config: error.config,
+      });
+      setError(
+        error.response?.data?.error || "Signup failed. Please try again."
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -194,16 +247,21 @@ export default function Signup() {
               ) : null}
               <Button
                 disabled={
-                  passwordErrors.length > 0 || passwordStrength?.score < 2
+                  passwordErrors.length > 0 ||
+                  passwordStrength?.score < 2 ||
+                  loading
                 }
                 type="submit"
                 className="w-full"
               >
-                Sign Up
+                {loading ? "Signing Up..." : "Sign Up"}
               </Button>
-              {validation ? (
-                <Alert severity="success">Signed up successfully</Alert>
-              ) : null}
+              {error && <Alert severity="error">{error}</Alert>}
+              {validation && (
+                <Alert severity="success">
+                  Signed up successfully! Redirecting...
+                </Alert>
+              )}
               {/* <Button variant="outline" className="w-full">
                 Sign Up with Google
               </Button> */}

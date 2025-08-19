@@ -1,3 +1,4 @@
+"use client";
 import { Button } from "@/components/ui/button";
 import {
   NavigationMenu,
@@ -10,17 +11,34 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
 import ThemeToggle from "./ThemeToggle";
 
-// Navigation links array to be used in both desktop and mobile menus
-const navigationLinks = [
-  { href: "#", label: "Home", active: true },
-  { href: "#", label: "Features" },
-  { href: "#", label: "Pricing" },
-  { href: "#", label: "About" },
-];
-
 export default function NavBarComponent() {
+  const { user, logout, isAuthenticated } = useAuth();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await logout();
+    router.push('/LogIn');
+  };
+
+  // Navigation links based on authentication status
+  const navigationLinks = isAuthenticated
+    ? [
+        { href: "/", label: "Home", active: true },
+        { href: "/Tasks", label: "Tasks" },
+        { href: "/StudySession", label: "Study Session" },
+        { href: "#", label: "Features" },
+      ]
+    : [
+        { href: "#", label: "Home", active: true },
+        { href: "#", label: "Features" },
+        { href: "#", label: "Pricing" },
+        { href: "#", label: "About" },
+      ];
+
   return (
     <header className="border-b px-4 md:px-6">
       <div className="flex h-16 items-center justify-between gap-4">
@@ -104,12 +122,25 @@ export default function NavBarComponent() {
         </div>
         {/* Right side */}
         <div className="flex items-center gap-2">
-          <Button asChild variant="ghost" size="sm" className="text-sm">
-            <a href="/LogIn">Sign In</a>
-          </Button>
-          <Button asChild size="sm" className="text-sm">
-            <a href="/SignUp">Get Started</a>
-          </Button>
+          {isAuthenticated ? (
+            <>
+              <span className="text-sm text-muted-foreground">
+                Welcome, {user?.username}
+              </span>
+              <Button onClick={handleLogout} variant="ghost" size="sm" className="text-sm">
+                Logout
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button asChild variant="ghost" size="sm" className="text-sm">
+                <a href="/LogIn">Sign In</a>
+              </Button>
+              <Button asChild size="sm" className="text-sm">
+                <a href="/SignUp">Get Started</a>
+              </Button>
+            </>
+          )}
           <ThemeToggle />
         </div>
       </div>
