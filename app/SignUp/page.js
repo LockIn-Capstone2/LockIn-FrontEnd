@@ -54,7 +54,7 @@ export default function Signup() {
     } else {
       setPasswordErrors([]);
     }
-    const result = zxcvbn(password);
+    const result = zxcvbn(event.target.value);
     setPasswordStrength(result);
   };
 
@@ -86,31 +86,99 @@ export default function Signup() {
 
   const handleSignUp = async (event) => {
     event.preventDefault();
-    if (validate(email)) {
-      setValidation(true);
+
+    if (!firstName || !lastName || !username || !email || !password) {
+      setAlertMessage("Please fill in all fields");
+      setAlertSeverity("error");
+      setAlertOpen(true);
+      return;
+    }
+
+    if (!validate(email)) {
+      setAlertMessage("Please enter a valid email address");
+      setAlertSeverity("error");
+      setAlertOpen(true);
+      return;
+    }
+
+    if (password.length < 8) {
+      setAlertMessage("Password must be at least 8 characters long");
+      setAlertSeverity("error");
+      setAlertOpen(true);
+      return;
+    }
+
+    if (passwordStrength && passwordStrength.score < 2) {
+      setAlertMessage(
+        "Password is too weak. Please choose a stronger password"
+      );
+      setAlertSeverity("error");
+      setAlertOpen(true);
+      return;
     }
 
     try {
-      const res = await axios.post(`http://localhost:8080/auth/signup`, {
-        firstName,
-        lastName,
-        username,
-        email,
-        password,
-      });
-      setAlertMessage("Signed up successfully! Redirecting...");
-      setAlertSeverity("success");
-      setAlertOpen(true);
+      const res = await axios.post(
+        `http://localhost:8080/api/signup`,
+        {
+          firstName,
+          lastName,
+          username,
+          email,
+          password,
+        },
+        {
+          withCredentials: true,
+        }
+      );
 
-      // Redirect after 2 seconds
-      setTimeout(() => {
-        navigate.push("/LogIn");
-      }, 1500);
+      if (res.data.message === "User created successfully") {
+        setAlertMessage("Signed up successfully! Redirecting...");
+        setAlertSeverity("success");
+        setAlertOpen(true);
+
+        // Clear form
+        setFirstName("");
+        setLastName("");
+        setUsername("");
+        setEmail("");
+        setPassword("");
+        setPasswordStrength(null);
+        setPasswordErrors([]);
+
+        // Redirect after 2 seconds
+        setTimeout(() => {
+          navigate.push("/LogIn");
+        }, 1500);
+      } else {
+        throw new Error("Signup failed - unexpected response");
+      }
     } catch (error) {
-      setAlertMessage(error?.response?.data?.message || "Sign-up failed");
+      console.error(error);
+
+      let errorMessage = "Sign-up failed";
+
+      if (error.response) {
+        if (error.response.status === 409) {
+          errorMessage =
+            "Username or email already exists. Please choose different credentials.";
+        } else if (error.response.status === 400) {
+          errorMessage = error.response.data.error || "Invalid input data";
+        } else if (error.response.status === 500) {
+          errorMessage = "Server error. Please try again later.";
+        } else {
+          errorMessage = error.response.data.error || "Sign-up failed";
+        }
+      } else if (error.request) {
+        errorMessage =
+          "Unable to connect to server. Please check your connection.";
+      } else {
+        errorMessage = error.message || "An unexpected error occurred";
+      }
+
+      setAlertMessage(errorMessage);
       setAlertSeverity("error");
       setAlertOpen(true);
-      console.error(error);
     }
   };
 

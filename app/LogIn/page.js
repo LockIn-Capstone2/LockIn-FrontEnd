@@ -35,21 +35,62 @@ function LogIn() {
 
   const handleLogin = async (event) => {
     event.preventDefault();
-    try {
-      const response = await axios.post(`http://localhost:8080/auth/login`, {
-        username,
-        password,
-      });
-      setAlertMessage("Log In successfully! Redirecting...");
-      setAlertSeverity("success");
-      setAlertOpen(true);
 
-      setTimeout(() => {
-        navigate.push("/DashBoard");
-      }, 1500);
+    if (!username || !password) {
+      setAlertMessage("Please enter both username and password");
+      setAlertSeverity("error");
+      setAlertOpen(true);
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        `http://localhost:8080/api/signup/login`,
+        {
+          username,
+          password,
+        },
+        {
+          withCredentials: true,
+        }
+      );
+
+      console.log(response.data);
+
+      if (response.data.message === "Login successful") {
+        setAlertMessage("Log In successfully! Redirecting...");
+        setAlertSeverity("success");
+        setAlertOpen(true);
+
+        setTimeout(() => {
+          navigate.push("/DashBoard");
+        }, 1500);
+      } else {
+        throw new Error("Login failed - unexpected response");
+      }
     } catch (error) {
       console.log("error", error.response);
-      setAlertMessage(error?.response?.data?.message || "Log In failed");
+
+      let errorMessage = "Log In failed";
+
+      if (error.response) {
+        if (error.response.status === 401) {
+          errorMessage = "Invalid username or password";
+        } else if (error.response.status === 400) {
+          errorMessage = error.response.data.error || "Invalid input";
+        } else if (error.response.status === 500) {
+          errorMessage = "Server error. Please try again later.";
+        } else {
+          errorMessage = error.response.data.error || "Log In failed";
+        }
+      } else if (error.request) {
+        errorMessage =
+          "Unable to connect to server. Please check your connection.";
+      } else {
+        errorMessage = error.message || "An unexpected error occurred";
+      }
+
+      setAlertMessage(errorMessage);
       setAlertSeverity("error");
       setAlertOpen(true);
     }
