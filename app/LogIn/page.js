@@ -10,8 +10,11 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import axios from "axios";
+import { Alert } from "@mui/material";
+import api from "@/utils/api";
+import { useAuth } from "@/contexts/AuthContext";
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Alert, Snackbar } from "@mui/material";
 import { useRouter } from "next/navigation";
@@ -19,11 +22,13 @@ import { useRouter } from "next/navigation";
 function LogIn() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [alertOpen, setAlertOpen] = useState(false);
-  const [alertMessage, setAlertMessage] = useState("");
-  const [alertSeverity, setAlertSeverity] = useState("success");
 
-  const navigate = useRouter();
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const router = useRouter();
+  const { checkAuthStatus } = useAuth();
+
 
   const handleUsernameChange = (event) => {
     setUsername(event.target.value);
@@ -36,64 +41,37 @@ function LogIn() {
   const handleLogin = async (event) => {
     event.preventDefault();
 
-    if (!username || !password) {
-      setAlertMessage("Please enter both username and password");
-      setAlertSeverity("error");
-      setAlertOpen(true);
-      return;
-    }
+    setLoading(true);
+    setError("");
 
     try {
-      const response = await axios.post(
-        `http://localhost:8080/api/signup/login`,
-        {
-          username,
-          password,
-        },
-        {
-          withCredentials: true,
-        }
-      );
+      const response = await api.post("/auth/login", {
+        username,
+        password,
+      });
 
-      console.log(response.data);
+      console.log("Login successful:", response.data);
 
-      if (response.data.message === "Login successful") {
-        setAlertMessage("Log In successfully! Redirecting...");
-        setAlertSeverity("success");
-        setAlertOpen(true);
+      // Update auth context
+      await checkAuthStatus();
 
-        setTimeout(() => {
-          navigate.push("/DashBoard");
-        }, 1500);
-      } else {
-        throw new Error("Login failed - unexpected response");
-      }
+      // Redirect to dashboard
+      router.push("/");
     } catch (error) {
-      console.log("error", error.response);
+      console.error("Login error:", error);
+      setError(
+        error.response?.data?.error || "Login failed. Please try again."
+      );
+    } finally {
+      setLoading(false);
 
-      let errorMessage = "Log In failed";
 
-      if (error.response) {
-        if (error.response.status === 401) {
-          errorMessage = "Invalid username or password";
-        } else if (error.response.status === 400) {
-          errorMessage = error.response.data.error || "Invalid input";
-        } else if (error.response.status === 500) {
-          errorMessage = "Server error. Please try again later.";
-        } else {
-          errorMessage = error.response.data.error || "Log In failed";
-        }
-      } else if (error.request) {
-        errorMessage =
-          "Unable to connect to server. Please check your connection.";
-      } else {
-        errorMessage = error.message || "An unexpected error occurred";
-      }
-
-      setAlertMessage(errorMessage);
-      setAlertSeverity("error");
-      setAlertOpen(true);
     }
+  };
+
+  const handleGoogleLogin = () => {
+    // Redirect to backend Google OAuth
+    window.location.href = `http://localhost:8080/auth/google`;
   };
 
   return (
@@ -165,11 +143,25 @@ function LogIn() {
                   Login with Google
                 </Button>
               </div>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
-    </>
+
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Logging in..." : "Login"}
+              </Button>
+              {error && <Alert severity="error">{error}</Alert>}
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={handleGoogleLogin}
+                type="button"
+              >
+                Login with Google
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+
   );
 }
 export default LogIn;

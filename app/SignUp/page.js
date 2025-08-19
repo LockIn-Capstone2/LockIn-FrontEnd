@@ -13,10 +13,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import zxcvbn from "zxcvbn";
 import { validate } from "email-validator";
-import { Alert, Snackbar } from "@mui/material";
-import axios from "axios";
+
+import { Alert } from "@mui/material";
+import api from "@/utils/api";
+import { useAuth } from "@/contexts/AuthContext";
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -27,6 +31,8 @@ export default function Signup() {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [validation, setValidation] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const [passwordErrors, setPasswordErrors] = useState([]);
   const [passwordStrength, setPasswordStrength] = useState(null);
   const [alertOpen, setAlertOpen] = useState(false);
@@ -34,6 +40,9 @@ export default function Signup() {
   const [alertSeverity, setAlertSeverity] = useState("success");
 
   const navigate = useRouter();
+
+  const router = useRouter();
+  const { checkAuthStatus } = useAuth();
 
   const handleFirstNameChange = (event) => {
     setFirstName(event.target.value);
@@ -87,98 +96,67 @@ export default function Signup() {
   const handleSignUp = async (event) => {
     event.preventDefault();
 
-    if (!firstName || !lastName || !username || !email || !password) {
-      setAlertMessage("Please fill in all fields");
-      setAlertSeverity("error");
-      setAlertOpen(true);
-      return;
-    }
+    setLoading(true);
+    setError("");
+    setValidation(false);
 
+    // Validate email
     if (!validate(email)) {
-      setAlertMessage("Please enter a valid email address");
-      setAlertSeverity("error");
-      setAlertOpen(true);
+      setError("Please enter a valid email address");
+      setLoading(false);
       return;
     }
 
-    if (password.length < 8) {
-      setAlertMessage("Password must be at least 8 characters long");
-      setAlertSeverity("error");
-      setAlertOpen(true);
+    // Validate password strength
+    if (passwordErrors.length > 0 || passwordStrength?.score < 2) {
+      setError("Please choose a stronger password");
+      setLoading(false);
       return;
     }
 
-    if (passwordStrength && passwordStrength.score < 2) {
-      setAlertMessage(
-        "Password is too weak. Please choose a stronger password"
-      );
-      setAlertSeverity("error");
-      setAlertOpen(true);
-      return;
-    }
+    console.log("📝 Starting signup process...");
+    console.log("🔍 Signup data:", {
+      firstName,
+      lastName,
+      username,
+      email,
+      password: "***",
+    });
 
     try {
-      const res = await axios.post(
-        `http://localhost:8080/api/signup`,
-        {
-          firstName,
-          lastName,
-          username,
-          email,
-          password,
-        },
-        {
-          withCredentials: true,
-        }
-      );
+      console.log("🌐 Making signup request to backend...");
+      const response = await api.post("/auth/signup", {
+        firstName,
+        lastName,
+        username,
+        email,
+        password,
+      });
 
-      if (res.data.message === "User created successfully") {
-        setAlertMessage("Signed up successfully! Redirecting...");
-        setAlertSeverity("success");
-        setAlertOpen(true);
 
-        // Clear form
-        setFirstName("");
-        setLastName("");
-        setUsername("");
-        setEmail("");
-        setPassword("");
-        setPasswordStrength(null);
-        setPasswordErrors([]);
+      console.log("✅ Signup successful:", response.data);
+      setValidation(true);
 
-        // Redirect after 2 seconds
-        setTimeout(() => {
-          navigate.push("/LogIn");
-        }, 1500);
-      } else {
-        throw new Error("Signup failed - unexpected response");
-      }
+      // Update auth context
+      await checkAuthStatus();
+
+      // Redirect to dashboard after a brief delay to show success message
+      setTimeout(() => {
+        router.push("/");
+      }, 1500);
     } catch (error) {
-      console.error(error);
-
-      let errorMessage = "Sign-up failed";
-
-      if (error.response) {
-        if (error.response.status === 409) {
-          errorMessage =
-            "Username or email already exists. Please choose different credentials.";
-        } else if (error.response.status === 400) {
-          errorMessage = error.response.data.error || "Invalid input data";
-        } else if (error.response.status === 500) {
-          errorMessage = "Server error. Please try again later.";
-        } else {
-          errorMessage = error.response.data.error || "Sign-up failed";
-        }
-      } else if (error.request) {
-        errorMessage =
-          "Unable to connect to server. Please check your connection.";
-      } else {
-        errorMessage = error.message || "An unexpected error occurred";
-      }
-
-      setAlertMessage(errorMessage);
-      setAlertSeverity("error");
-      setAlertOpen(true);
+      console.error("❌ Signup error:", error);
+      console.error("🔍 Error details:", {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+        config: error.config,
+      });
+      setError(
+        error.response?.data?.error || "Signup failed. Please try again."
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -283,34 +261,59 @@ export default function Signup() {
                     value={password}
                   />
                 </div>
-                {passwordStrength ? (
-                  <div className="font-[poppins]">
-                    <div>{passwordStrengthBar(passwordStrength)}</div>
-                    {passwordStrength.feedback.suggestions.length ? (
-                      <p>
-                        Feedback:{" "}
-                        {passwordStrength.feedback.suggestions.join(", ")}
-                      </p>
-                    ) : null}
-                  </div>
-                ) : null}
-                <Button
-                  disabled={
-                    passwordErrors.length > 0 || passwordStrength?.score < 2
-                  }
-                  type="submit"
-                  className="w-full"
-                >
-                  Sign Up
-                </Button>
-                {/* <Button variant="outline" className="w-full">
-                Sign Up with Google
-                </Button> */}
+
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Enter a password: "
+                  required
+                  onChange={handlePasswordChange}
+                  value={password}
+                />
               </div>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
-    </>
+              {passwordStrength ? (
+                <div className="font-[poppins]">
+                  <div>{passwordStrengthBar(passwordStrength)}</div>
+                  {passwordStrength.feedback.suggestions.length ? (
+                    <p>
+                      Feedback:{" "}
+                      {passwordStrength.feedback.suggestions.join(", ")}
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
+              <Button
+                disabled={
+                  passwordErrors.length > 0 ||
+                  passwordStrength?.score < 2 ||
+                  loading
+                }
+                type="submit"
+                className="w-full"
+              >
+                {loading ? "Signing Up..." : "Sign Up"}
+              </Button>
+              {error && <Alert severity="error">{error}</Alert>}
+              {validation && (
+                <Alert severity="success">
+                  Signed up successfully! Redirecting...
+                </Alert>
+              )}
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() =>
+                  (window.location.href = "http://localhost:8080/auth/google")
+                }
+                type="button"
+              >
+                Sign Up with Google
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+
   );
 }
