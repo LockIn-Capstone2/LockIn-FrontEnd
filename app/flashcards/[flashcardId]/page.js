@@ -10,35 +10,86 @@ import { Hourglass } from "ldrs/react";
 
 export default function FlashcardPage() {
   const { flashcardId } = useParams();
-
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [responseType, setResponseType] = useState(null);
   const [showAnswer, setShowAnswer] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [sessionId] = useState(`session_${Date.now()}`); // Unique session ID
-  const [startTime] = useState(Date.now()); // Track session start time
+  const [sessionId] = useState(`session_${Date.now()}`);
+  const [startTime] = useState(Date.now());
+  const [user, setUser] = useState(null);
 
   const navigate = useRouter();
 
+  // Get current authenticated user
+  useEffect(() => {
+    const getCurrentUser = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:8080/api/progress/current-user",
+          {
+            credentials: "include",
+          }
+        );
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            // User not authenticated, redirect to login
+            navigate.push("/LogIn");
+            return;
+          }
+          throw new Error("Failed to fetch user data");
+        }
+
+        const userData = await response.json();
+        if (userData && userData.user) {
+          setUser(userData.user);
+        } else {
+          navigate.push("/LogIn");
+        }
+      } catch (error) {
+        console.error("Error fetching user:", error);
+        navigate.push("/LogIn");
+      }
+    };
+
+    getCurrentUser();
+  }, [navigate]);
+
+  // Progress tracking function
+  // ... existing code ...
+
   // Progress tracking function
   const recordProgress = async (cardIndex, isCorrect) => {
+    if (!user) {
+      console.error("No authenticated user found");
+      return;
+    }
+
     try {
       const duration = Date.now() - startTime;
 
-      await fetch("http://localhost:8080/api/progress/flashcard-progress", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user_id: 1, // Replace with actual user ID from auth
-          ai_chat_history_id: flashcardId,
-          card_index: cardIndex,
-          is_correct: isCorrect,
-          duration_ms: duration,
-          session_id: sessionId,
-        }),
-      });
+      const response = await fetch(
+        "http://localhost:8080/api/progress/flashcard-progress",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            // Remove user_id - it's now extracted from JWT token
+            ai_chat_history_id: flashcardId,
+            card_index: cardIndex,
+            is_correct: isCorrect,
+            duration_ms: duration,
+            session_id: sessionId,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to record progress: ${response.status}`);
+      }
 
       console.log(
         `Progress recorded: Card ${cardIndex}, Correct: ${isCorrect}`
@@ -48,13 +99,22 @@ export default function FlashcardPage() {
     }
   };
 
+  // ... existing code ...
   const startSession = async () => {
+    if (!user) return;
+
     try {
-      await fetch("http://localhost:8080/api/sessions/start", {
+      const response = await fetch("http://localhost:8080/api/sessions/start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: 1 }),
+        credentials: "include",
+        // Remove body since user ID comes from JWT token
       });
+
+      if (!response.ok) {
+        throw new Error(`Failed to start session: ${response.status}`);
+      }
+
       console.log("Session started");
     } catch (err) {
       console.error("Failed to start session:", err);
@@ -62,12 +122,20 @@ export default function FlashcardPage() {
   };
 
   const endSession = async () => {
+    if (!user) return;
+
     try {
-      await fetch("http://localhost:8080/api/sessions/end", {
+      const response = await fetch("http://localhost:8080/api/sessions/end", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: 1 }),
+        credentials: "include",
+        // Remove body since user ID comes from JWT token
       });
+
+      if (!response.ok) {
+        throw new Error(`Failed to end session: ${response.status}`);
+      }
+
       console.log("Session ended");
     } catch (err) {
       console.error("Failed to end session:", err);
@@ -75,7 +143,7 @@ export default function FlashcardPage() {
   };
 
   useEffect(() => {
-    if (!flashcardId) return;
+    if (!flashcardId || !user) return;
 
     startSession();
 
@@ -85,7 +153,10 @@ export default function FlashcardPage() {
         setError(null);
 
         const res = await fetch(
-          `http://localhost:8080/api/chat/flashcards/${flashcardId}`
+          `http://localhost:8080/api/chat/flashcards/${flashcardId}`,
+          {
+            credentials: "include",
+          }
         );
 
         if (!res.ok) {
@@ -121,7 +192,7 @@ export default function FlashcardPage() {
     return () => {
       endSession();
     };
-  }, [flashcardId]);
+  }, [flashcardId, user]);
 
   const isFlashcard =
     data &&
@@ -166,6 +237,18 @@ export default function FlashcardPage() {
       `Card ${currentIndex + 1}: ${isCorrect ? "Correct" : "Incorrect"}`
     );
   };
+
+  // Don't render anything until we have user data
+  if (!user) {
+    return (
+      <div className="p-8 text-center">
+        <Hourglass size="40" bgOpacity="0.1" speed="1.75" color="white" />
+        <div className="text-lg text-white font-[poppins]">
+          Authenticating user...
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -218,6 +301,11 @@ export default function FlashcardPage() {
           <div className="p-8 max-w-[800px] m-auto">
             <div className="flex items-center justify-center mb-4">
               <ShareButtonDemo />
+            </div>
+
+            {/* User info */}
+            <div className="text-center mb-4 font-[poppins] text-sm text-gray-600">
+              Studying as: <strong>{user.username}</strong>
             </div>
 
             {/* Progress indicator */}

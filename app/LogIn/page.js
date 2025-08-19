@@ -40,6 +40,7 @@ function LogIn() {
 
   const handleLogin = async (event) => {
     event.preventDefault();
+
     setLoading(true);
     setError("");
 
@@ -63,6 +64,7 @@ function LogIn() {
       );
     } finally {
       setLoading(false);
+
 
     }
   };

@@ -63,7 +63,7 @@ export default function Signup() {
     } else {
       setPasswordErrors([]);
     }
-    const result = zxcvbn(password);
+    const result = zxcvbn(event.target.value);
     setPasswordStrength(result);
   };
 
@@ -95,6 +95,7 @@ export default function Signup() {
 
   const handleSignUp = async (event) => {
     event.preventDefault();
+
     setLoading(true);
     setError("");
     setValidation(false);
