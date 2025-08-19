@@ -5,6 +5,7 @@ import React from "react";
 import { LineChart } from "@mui/x-charts";
 import { useParams } from "next/navigation";
 import "./style.module.css";
+
 function ChartData() {
   const [studyData, setStudyData] = useState([]);
   const { userId } = useParams();
@@ -33,30 +34,26 @@ function ChartData() {
 
   const formattedData = studyData.map((item) => ({
     ...item,
-    created_at: new Date(item.created_at),
+    formattedDate: item.formattedDate,
     duration: durationToMinutes(item.duration),
   }));
 
   return (
-    <div className="flex h-screen ">
+    <div className="flex h-screen bg-[white] ">
       {studyData.length > 0 ? (
         <LineChart
           dataset={formattedData}
           xAxis={[
             {
-              dataKey: "created_at",
-              scaleType: "time",
+              dataKey: "formattedDate",
+              scaleType: "point",
               label: "Created At",
-              valueFormatter: (date) =>
-                date instanceof Date
-                  ? date.toLocaleDateString() + " " + date.toLocaleTimeString()
-                  : String(date),
             },
           ]}
           yAxis={[{ label: "Duration (in minutes)" }]}
           series={[{ dataKey: "duration" }]}
-          height={300}
-          width={300}
+          height={500}
+          width={700}
         />
       ) : (
         <div className="flex text-center justify-center align-center font-[poppins] m-auto ">

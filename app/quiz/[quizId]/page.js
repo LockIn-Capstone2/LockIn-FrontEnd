@@ -22,8 +22,33 @@ export default function QuizPage() {
   const [showScore, setShowScore] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [showAnswer, setShowAnswer] = useState(false);
+  const [sessionId] = useState(`session_${Date.now()}`); // Unique session ID
+  const [startTime] = useState(Date.now()); // Track session start time
 
   const navigate = useRouter();
+
+  // Progress tracking function
+  const recordQuizProgress = async (finalScore) => {
+    try {
+      const duration = Date.now() - startTime;
+
+      await fetch("http://localhost:8080/api/progress/quiz-progress", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: 1, // Replace with actual user ID from auth
+          ai_chat_history_id: quizId,
+          score: finalScore,
+          duration_ms: duration,
+          session_id: sessionId,
+        }),
+      });
+
+      console.log(`Quiz progress recorded: Score ${finalScore}%`);
+    } catch (error) {
+      console.error("Failed to record quiz progress:", error);
+    }
+  };
 
   useEffect(() => {
     if (!quizId) return;
@@ -108,6 +133,11 @@ export default function QuizPage() {
       if (next < data.length) {
         setCurrentIndex(next);
       } else {
+        // Quiz completed - record progress
+        const finalScore = Math.round(
+          ((score + (isCorrect ? 1 : 0)) / data.length) * 100
+        );
+        recordQuizProgress(finalScore);
         setShowScore(true);
       }
     }, 2000);
@@ -204,7 +234,6 @@ export default function QuizPage() {
           <ThemeToggleButton />
           <div className="p-8 max-w-[800px] m-auto">
             {/* Progress bar */}
-
             <div className="flex justify-between mb-1">
               <span className="text-base font-medium text-blue-700 dark:text-white">
                 Quiz
@@ -216,7 +245,7 @@ export default function QuizPage() {
             <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 mb-8">
               <div
                 className="bg-blue-600 h-2.5 rounded-full"
-                // style="width: 45%"
+                style={{ width: `${progress}%` }}
               ></div>
             </div>
 
