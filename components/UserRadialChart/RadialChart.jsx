@@ -7,7 +7,6 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from "recharts";
-
 import {
   Card,
   CardContent,
@@ -24,102 +23,109 @@ export const description =
 const transformStreakData = (streakData) => {
   if (!streakData) return [];
 
-  const currentStreak = streakData.currentStreak || 0;
-  const longestStreak = streakData.longestStreak || 0;
+  // Handle both normalized and raw streak data
+  const current = streakData.current || streakData.currentStreak || 0;
+  const goal = streakData.goal || streakData.nextMilestone || 30;
+  const percent =
+    streakData.percent || Math.min(100, Math.round((current / goal) * 100));
 
-  // Calculate next milestone (next multiple of 7)
-  const nextMilestone = Math.ceil(currentStreak / 7) * 7;
-  const progressPercentage =
-    nextMilestone > 0 ? Math.round((currentStreak / nextMilestone) * 100) : 0;
-
+  // Create data for the radial chart with dynamic colors
   return [
     {
-      name: "Current Streak",
-      value: currentStreak,
-      fill: "#3b82f6",
-      progress: progressPercentage,
-    },
-    {
-      name: "Longest Streak",
-      value: longestStreak,
-      fill: "#10b981",
-      progress: 100, // Always show full bar for longest streak
+      name: "Current Progress",
+      value: percent,
+      fill: "hsl(var(--chart-4))",
+      streak: current,
+      goal: goal,
     },
   ];
 };
 
-export function StreakProgressRadialChart({ streakData }) {
+export function StreakProgressRadialChart({ data: streakData }) {
   const transformedData = transformStreakData(streakData);
 
-  const currentStreak = streakData?.currentStreak || 0;
-  const longestStreak = streakData?.longestStreak || 0;
-  const nextMilestone = Math.ceil(currentStreak / 7) * 7;
-  const progressPercentage =
-    nextMilestone > 0 ? Math.round((currentStreak / nextMilestone) * 100) : 0;
+  // Handle both normalized and raw streak data
+  const current = streakData?.current || streakData?.currentStreak || 0;
+  const goal = streakData?.goal || streakData?.nextMilestone || 30;
+  const percent =
+    streakData?.percent || Math.min(100, Math.round((current / goal) * 100));
 
-  // Calculate trend (comparing current vs longest)
-  const trendPercentage =
-    longestStreak > 0
-      ? (((currentStreak - longestStreak) / longestStreak) * 100).toFixed(1)
-      : 0;
-  const isTrendingUp = currentStreak > longestStreak;
+  // Calculate trend (comparing current vs goal)
+  const isTrendingUp = current > 0;
+  const progressToGoal = goal > 0 ? Math.round((current / goal) * 100) : 0;
 
   return (
-    <Card className="flex flex-col">
-      <CardHeader className="items-center pb-0">
-        <CardTitle>Streak Progress</CardTitle>
+    <Card className="flex flex-col group hover:shadow-lg transition-all duration-300">
+      <CardHeader className="text-center">
+        <CardTitle>🔥 Streak Progress</CardTitle>
         <CardDescription>
           Current streak progress towards next milestone
         </CardDescription>
       </CardHeader>
-      <CardContent className="flex-1 pb-0">
-        <div className="mx-auto aspect-square max-h-[250px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <RadialBarChart
-              data={transformedData}
-              innerRadius={30}
-              outerRadius={110}
-              startAngle={180}
-              endAngle={0}
-            >
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "white",
-                  border: "1px solid #ccc",
-                  borderRadius: "4px",
-                }}
-                formatter={(value, name) => [value, name]}
-              />
-              <RadialBar
-                dataKey="progress"
-                background
-                cornerRadius={10}
-                fill="#e5e7eb"
-              />
-            </RadialBarChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Center text */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-gray-900 dark:text-white">
-              {currentStreak}
-            </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">days</div>
-          </div>
-        </div>
+      <CardContent className="flex-1 flex items-center justify-center">
+        <ResponsiveContainer width="100%" height={200}>
+          <RadialBarChart
+            cx="50%"
+            cy="50%"
+            innerRadius="60%"
+            outerRadius="90%"
+            data={transformedData}
+            startAngle={180}
+            endAngle={0}
+          >
+            <RadialBar
+              minAngle={15}
+              background={{ fill: "hsl(var(--muted))" }}
+              clockWise={true}
+              dataKey="value"
+              cornerRadius={30}
+              fill="hsl(var(--chart-4))"
+              className="transition-all duration-300 hover:opacity-80"
+            />
+            <Tooltip
+              content={({ active, payload }) => {
+                if (active && payload && payload.length) {
+                  const data = payload[0].payload;
+                  return (
+                    <div className="bg-card border border-border rounded-lg shadow-lg p-4 backdrop-blur-sm">
+                      <p className="font-medium text-foreground mb-2">
+                        {data.name}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {data.streak} / {data.goal} days ({data.value}%)
+                      </p>
+                      <div className="mt-2 text-xs text-muted-foreground">
+                        {data.value >= 100
+                          ? "🎉 Goal achieved!"
+                          : "Keep going!"}
+                      </div>
+                    </div>
+                  );
+                }
+                return null;
+              }}
+            />
+          </RadialBarChart>
+        </ResponsiveContainer>
       </CardContent>
-      <CardFooter className="flex-col gap-2 text-sm">
-        <div className="flex items-center gap-2 leading-none font-medium">
-          {isTrendingUp ? "New record!" : "Keep going!"}{" "}
-          {Math.abs(trendPercentage)}% vs longest
-          <TrendingUp
-            className={`h-4 w-4 ${isTrendingUp ? "" : "rotate-180"}`}
-          />
+      <CardFooter className="flex-col gap-2 text-center text-sm">
+        <div className="flex items-center justify-center gap-2 font-medium">
+          {isTrendingUp ? (
+            <>
+              Great Progress!{" "}
+              <TrendingUp className="h-4 w-4 text-green-600 animate-pulse" />
+            </>
+          ) : (
+            <>
+              Keep Going! <TrendingUp className="h-4 w-4 text-blue-600" />
+            </>
+          )}
         </div>
-        <div className="text-muted-foreground leading-none">
-          {progressPercentage}% to next milestone ({nextMilestone} days)
+        <div className="text-muted-foreground">
+          {progressToGoal}% to next milestone ({goal} days)
+        </div>
+        <div className="text-lg font-bold text-foreground group-hover:text-primary transition-colors">
+          {current} day{current !== 1 ? "s" : ""} streak
         </div>
       </CardFooter>
     </Card>

@@ -1,141 +1,106 @@
 "use client";
 
-import { TrendingUp } from "lucide-react";
 import {
   Bar,
   BarChart,
   CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
 } from "recharts";
-
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 
-export const description =
-  "Weekly study activity bar chart showing daily study volume";
+export const description = "Bar chart showing weekly study activity";
 
-// Transform chart data for weekly activity
-const transformWeeklyData = (chartData) => {
-  if (!chartData || !Array.isArray(chartData)) return [];
+export function WeeklyActivityBarChart({ data }) {
+  if (!data || data.length === 0) {
+    return (
+      <Card className="flex flex-col">
+        <CardHeader>
+          <CardTitle>⏰ Study Time Analysis</CardTitle>
+          <CardDescription>Time spent studying each day</CardDescription>
+        </CardHeader>
+        <CardContent className="flex-1 flex items-center justify-center">
+          <div className="text-center text-muted-foreground">
+            <p className="text-sm">No data available</p>
+            <p className="text-xs">
+              Complete some study sessions to see your activity
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
-  return chartData.map((item) => ({
-    day: item.day,
-    flashcards: item.flashcardCount,
-    quizzes: item.quizCount,
-    total: item.flashcardCount + item.quizCount,
-  }));
-};
-
-export function WeeklyActivityBarChart({ chartData }) {
-  const transformedData = transformWeeklyData(chartData);
-
-  // Calculate weekly totals and trends
-  const weeklyTotals = transformedData.reduce(
-    (acc, item) => ({
-      flashcards: acc.flashcards + item.flashcards,
-      quizzes: acc.quizzes + item.quizzes,
-      total: acc.total + item.total,
-    }),
-    { flashcards: 0, quizzes: 0, total: 0 }
-  );
-
-  // Find most active day
-  const mostActiveDay = transformedData.reduce((max, item) =>
-    item.total > max.total ? item : max
-  );
-
-  // Calculate trend (comparing recent vs older days)
-  const recentData = transformedData.slice(-3);
-  const olderData = transformedData.slice(-6, -3);
-
-  const recentAvg =
-    recentData.reduce((sum, item) => sum + item.total, 0) / recentData.length;
-  const olderAvg =
-    olderData.reduce((sum, item) => sum + item.total, 0) / olderData.length;
-
-  const trendPercentage =
-    olderAvg > 0 ? (((recentAvg - olderAvg) / olderAvg) * 100).toFixed(1) : 0;
-  const isTrendingUp = trendPercentage > 0;
+  // Dynamic colors that work well in both light and dark modes
+  const barColor = "hsl(var(--chart-3))";
 
   return (
-    <Card>
+    <Card className="flex flex-col">
       <CardHeader>
-        <CardTitle>Weekly Study Activity</CardTitle>
-        <CardDescription>
-          Daily study volume over the last 7 days
-        </CardDescription>
+        <CardTitle>⏰ Study Time Analysis</CardTitle>
+        <CardDescription>Time spent studying each day</CardDescription>
       </CardHeader>
-      <CardContent>
-        <div className="h-64 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={transformedData}
-              margin={{
-                top: 10,
-                right: 30,
-                left: 0,
-                bottom: 0,
+      <CardContent className="flex-1">
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={data}>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+            <XAxis
+              dataKey="label"
+              tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
+              tickLine={false}
+              axisLine={{ stroke: "hsl(var(--border))" }}
+            />
+            <YAxis
+              tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
+              tickLine={false}
+              axisLine={{ stroke: "hsl(var(--border))" }}
+              label={{
+                value: "Minutes",
+                angle: -90,
+                position: "insideLeft",
+                style: { fill: "hsl(var(--muted-foreground))" },
               }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis
-                dataKey="day"
-                tick={{ fontSize: 12 }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis
-                tick={{ fontSize: 12 }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "white",
-                  border: "1px solid #ccc",
-                  borderRadius: "4px",
-                }}
-              />
-              <Legend />
-              <Bar
-                dataKey="flashcards"
-                fill="#3b82f6"
-                name="Flashcards"
-                radius={[4, 4, 0, 0]}
-              />
-              <Bar
-                dataKey="quizzes"
-                fill="#10b981"
-                name="Quizzes"
-                radius={[4, 4, 0, 0]}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+            />
+            <Tooltip
+              content={({ active, payload, label }) => {
+                if (active && payload && payload.length) {
+                  return (
+                    <div className="bg-card border border-border rounded-lg shadow-lg p-3 backdrop-blur-sm">
+                      <p className="font-medium text-foreground mb-2">
+                        {label}
+                      </p>
+                      {payload.map((entry, index) => (
+                        <p
+                          key={index}
+                          className="text-sm text-muted-foreground"
+                          style={{ color: entry.color }}
+                        >
+                          {entry.name}: {entry.value} minutes
+                        </p>
+                      ))}
+                    </div>
+                  );
+                }
+                return null;
+              }}
+            />
+            <Bar
+              dataKey="minutes"
+              fill={barColor}
+              radius={[4, 4, 0, 0]}
+              name="Study Minutes"
+            />
+          </BarChart>
+        </ResponsiveContainer>
       </CardContent>
-      <CardFooter className="flex-col items-start gap-2 text-sm">
-        <div className="flex gap-2 leading-none font-medium">
-          {isTrendingUp ? "Trending up" : "Trending down"} by{" "}
-          {Math.abs(trendPercentage)}% this week
-          <TrendingUp
-            className={`h-4 w-4 ${isTrendingUp ? "" : "rotate-180"}`}
-          />
-        </div>
-        <div className="text-muted-foreground leading-none">
-          {weeklyTotals.total} total activities • Most active:{" "}
-          {mostActiveDay.day}
-        </div>
-      </CardFooter>
     </Card>
   );
 }

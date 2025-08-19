@@ -1,127 +1,139 @@
 "use client";
 
-import { TrendingUp } from "lucide-react";
-import { AreaChart, Area, CartesianGrid, XAxis } from "recharts";
-
 import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
-
+  Area,
+  AreaChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 
-export const description = "User progress area chart showing daily performance";
+export const description = "Area chart showing daily progress trends";
 
-// Transform chart data from API
-const transformChartData = (chartData) => {
-  if (!chartData || !Array.isArray(chartData)) return [];
+export function ProgressAreaChart({ data }) {
+  if (!data || data.length === 0) {
+    return (
+      <Card className="flex flex-col h-full">
+        <CardHeader>
+          <CardTitle>📈 Daily Progress Trends</CardTitle>
+          <CardDescription>
+            Flashcard accuracy and study minutes over time
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex-1 flex items-center justify-center">
+          <div className="text-center text-muted-foreground">
+            <p className="text-sm">No data available</p>
+            <p className="text-xs">
+              Complete some study sessions to see your progress
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
-  return chartData.map((item) => ({
-    day: item.day,
-    flashcardAccuracy: item.flashcardAccuracy,
-    quizScore: item.quizScore,
-  }));
-};
-
-const chartConfig = {
-  flashcardAccuracy: {
-    label: "Flashcard Accuracy",
-    color: "var(--chart-1)",
-  },
-  quizScore: {
-    label: "Quiz Score",
-    color: "var(--chart-2)",
-  },
-};
-
-export function ProgressAreaChart({ chartData }) {
-  const transformedData = transformChartData(chartData);
-
-  // Calculate trend
-  const recentData = transformedData.slice(-3);
-  const olderData = transformedData.slice(-6, -3);
-
-  const recentAvg =
-    recentData.reduce((sum, item) => sum + item.flashcardAccuracy, 0) /
-    recentData.length;
-  const olderAvg =
-    olderData.reduce((sum, item) => sum + item.flashcardAccuracy, 0) /
-    olderData.length;
-
-  const trendPercentage =
-    olderAvg > 0 ? (((recentAvg - olderAvg) / olderAvg) * 100).toFixed(1) : 0;
-  const isTrendingUp = trendPercentage > 0;
+  // Dynamic colors that work well in both light and dark modes
+  const accuracyColor = "hsl(var(--chart-1))";
+  const minutesColor = "hsl(var(--chart-2))";
 
   return (
-    <Card>
+    <Card className="flex flex-col">
       <CardHeader>
-        <CardTitle>Daily Progress</CardTitle>
+        <CardTitle>📈 Daily Progress Trends</CardTitle>
         <CardDescription>
-          Flashcard accuracy and quiz scores over the last 7 days
+          Flashcard accuracy and study minutes over time
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <ChartContainer config={chartConfig}>
-          <AreaChart
-            accessibilityLayer
-            data={transformedData}
-            margin={{
-              left: 12,
-              right: 12,
-            }}
-          >
-            <CartesianGrid vertical={false} />
+      <CardContent className="flex-1">
+        <ResponsiveContainer width="100%" height={300}>
+          <AreaChart data={data}>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
             <XAxis
-              dataKey="day"
+              dataKey="label"
+              tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
               tickLine={false}
-              axisLine={false}
-              tickMargin={8}
+              axisLine={{ stroke: "hsl(var(--border))" }}
             />
-            <ChartTooltip
-              cursor={false}
-              content={<ChartTooltipContent indicator="line" />}
+            <YAxis
+              yAxisId="left"
+              tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
+              tickLine={false}
+              axisLine={{ stroke: "hsl(var(--border))" }}
+              label={{
+                value: "Accuracy (%)",
+                angle: -90,
+                position: "insideLeft",
+                style: { fill: "hsl(var(--muted-foreground))" },
+              }}
+            />
+            <YAxis
+              yAxisId="right"
+              orientation="right"
+              tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
+              tickLine={false}
+              axisLine={{ stroke: "hsl(var(--border))" }}
+              label={{
+                value: "Minutes",
+                angle: 90,
+                position: "insideRight",
+                style: { fill: "hsl(var(--muted-foreground))" },
+              }}
+            />
+            <Tooltip
+              content={({ active, payload, label }) => {
+                if (active && payload && payload.length) {
+                  return (
+                    <div className="bg-card border border-border rounded-lg shadow-lg p-3 backdrop-blur-sm">
+                      <p className="font-medium text-foreground mb-2">
+                        {label}
+                      </p>
+                      {payload.map((entry, index) => (
+                        <p
+                          key={index}
+                          className="text-sm text-muted-foreground"
+                          style={{ color: entry.color }}
+                        >
+                          {entry.name}: {entry.value}
+                        </p>
+                      ))}
+                    </div>
+                  );
+                }
+                return null;
+              }}
             />
             <Area
-              dataKey="flashcardAccuracy"
-              type="natural"
-              fill="var(--color-flashcardAccuracy)"
-              fillOpacity={0.4}
-              stroke="var(--color-flashcardAccuracy)"
+              yAxisId="left"
+              type="monotone"
+              dataKey="accuracy"
+              stroke={accuracyColor}
+              fill={accuracyColor}
+              fillOpacity={0.3}
+              name="Accuracy %"
+              strokeWidth={2}
             />
             <Area
-              dataKey="quizScore"
-              type="natural"
-              fill="var(--color-quizScore)"
-              fillOpacity={0.4}
-              stroke="var(--color-quizScore)"
+              yAxisId="right"
+              type="monotone"
+              dataKey="minutes"
+              stroke={minutesColor}
+              fill={minutesColor}
+              fillOpacity={0.3}
+              name="Minutes"
+              strokeWidth={2}
             />
           </AreaChart>
-        </ChartContainer>
+        </ResponsiveContainer>
       </CardContent>
-      <CardFooter>
-        <div className="flex w-full items-start gap-2 text-sm">
-          <div className="grid gap-2">
-            <div className="flex items-center gap-2 leading-none font-medium">
-              {isTrendingUp ? "Trending up" : "Trending down"} by{" "}
-              {Math.abs(trendPercentage)}% this week
-              <TrendingUp
-                className={`h-4 w-4 ${isTrendingUp ? "" : "rotate-180"}`}
-              />
-            </div>
-            <div className="text-muted-foreground flex items-center gap-2 leading-none">
-              Last 7 days performance
-            </div>
-          </div>
-        </div>
-      </CardFooter>
     </Card>
   );
 }
