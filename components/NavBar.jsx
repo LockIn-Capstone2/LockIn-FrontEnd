@@ -15,6 +15,16 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import ThemeToggle from "./ThemeToggle";
 
+
+// Navigation links array to be used in both desktop and mobile menus
+const navigationLinks = [
+  { href: "#", label: "Home", active: true },
+  { href: "/LockInChat", label: "Study with AI", active: false },
+  { href: "/StudySession", label: "Study Timer", active: false },
+  { href: "/Tasks", label: "Tasks", active: false },
+];
+
+
 export default function NavBarComponent() {
   const { user, logout, isAuthenticated } = useAuth();
   const router = useRouter();

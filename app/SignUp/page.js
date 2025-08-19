@@ -1,4 +1,5 @@
 "use client";
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -15,10 +16,13 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import zxcvbn from "zxcvbn";
 import { validate } from "email-validator";
+
 import { Alert } from "@mui/material";
 import api from "@/utils/api";
 import { useAuth } from "@/contexts/AuthContext";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function Signup() {
   const [firstName, setFirstName] = useState("");
@@ -31,6 +35,11 @@ export default function Signup() {
   const [loading, setLoading] = useState(false);
   const [passwordErrors, setPasswordErrors] = useState([]);
   const [passwordStrength, setPasswordStrength] = useState(null);
+  const [alertOpen, setAlertOpen] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertSeverity, setAlertSeverity] = useState("success");
+
+  const navigate = useRouter();
 
   const router = useRouter();
   const { checkAuthStatus } = useAuth();
@@ -123,6 +132,7 @@ export default function Signup() {
         password,
       });
 
+
       console.log("✅ Signup successful:", response.data);
       setValidation(true);
 
@@ -150,81 +160,107 @@ export default function Signup() {
   };
 
   return (
-    <div className="bg-[url('/Shapes.png')] bg-cover bg-center bg-no-repeat min-h-screen flex items-center justify-center bg-white">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle>Create an Account</CardTitle>
-          <CardDescription>
-            Enter your Info below to Create your account
-          </CardDescription>
-          <CardAction>
-            <Button variant="link">
-              <Link href="/LogIn">Log In</Link>
-            </Button>
-          </CardAction>
-        </CardHeader>
+    <>
+      <Snackbar
+        open={alertOpen}
+        autoHideDuration={3000}
+        onClose={() => setAlertOpen(false)}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setAlertOpen(false)}
+          severity={alertSeverity}
+          sx={{ width: "100%" }}
+        >
+          {alertMessage}
+        </Alert>
+      </Snackbar>
 
-        <CardContent>
-          <form onSubmit={handleSignUp}>
-            <div className="flex flex-col gap-6">
-              <div className="grid gap-2">
-                <Label htmlFor="firstname">First Name</Label>
-                <Input
-                  id="firstName"
-                  type="text"
-                  placeholder="John"
-                  required
-                  onChange={handleFirstNameChange}
-                  value={firstName}
-                />
-              </div>
+      <div className="bg-[url('/Shapes.png')] bg-cover bg-center bg-no-repeat min-h-screen flex items-center justify-center bg-white">
+        <Card className="w-full max-w-sm">
+          <CardHeader>
+            <CardTitle>Create an Account</CardTitle>
+            <CardDescription>
+              Enter your Info below to Create your account
+            </CardDescription>
+            <CardAction>
+              <Button variant="link">
+                <Link href="/LogIn">Log In</Link>
+              </Button>
+            </CardAction>
+          </CardHeader>
 
-              <div className="grid gap-2">
-                <Label htmlFor="lastname">Last Name</Label>
-                <Input
-                  id="lastname"
-                  type="text"
-                  placeholder="Doe"
-                  required
-                  onChange={handleLastNameChange}
-                  value={lastName}
-                />
-              </div>
+          <CardContent>
+            <form onSubmit={handleSignUp}>
+              <div className="flex flex-col gap-6">
+                <div className="grid gap-2">
+                  <Label htmlFor="firstname">First Name</Label>
+                  <Input
+                    id="firstName"
+                    type="text"
+                    placeholder="John"
+                    required
+                    onChange={handleFirstNameChange}
+                    value={firstName}
+                  />
+                </div>
 
-              <div className="grid gap-2">
-                <Label htmlFor="email">Username</Label>
-                <Input
-                  id="username"
-                  type="text"
-                  placeholder="tonysoprano12"
-                  required
-                  onChange={handleUsernameChange}
-                  value={username}
-                />
-              </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="lastname">Last Name</Label>
+                  <Input
+                    id="lastname"
+                    type="text"
+                    placeholder="Doe"
+                    required
+                    onChange={handleLastNameChange}
+                    value={lastName}
+                  />
+                </div>
 
-              <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="m@example.com"
-                  required
-                  onChange={handleEmailChange}
-                  value={email}
-                />
-              </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="email">Username</Label>
+                  <Input
+                    id="username"
+                    type="text"
+                    placeholder="tonysoprano12"
+                    required
+                    onChange={handleUsernameChange}
+                    value={username}
+                  />
+                </div>
 
-              <div className="grid gap-2">
-                <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
-                  {/* <a
+                <div className="grid gap-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="m@example.com"
+                    required
+                    onChange={handleEmailChange}
+                    value={email}
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <div className="flex items-center">
+                    <Label htmlFor="password">Password</Label>
+                    {/* <a
                     href="#"
                     className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-                  >
+                    >
                     Forgot your password?
-                  </a> */}
+                    </a> */}
+                  </div>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Enter a password: "
+                    required
+                    onChange={handlePasswordChange}
+                    value={password}
+                  />
                 </div>
+
                 <Input
                   id="password"
                   type="password"
@@ -277,5 +313,6 @@ export default function Signup() {
         </CardContent>
       </Card>
     </div>
+
   );
 }
