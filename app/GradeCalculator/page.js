@@ -25,8 +25,13 @@ import {
 
 function GradeCalculator() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const editTitle = searchParams.get("editTitle");
+  const [editTitle, setEditTitle] = useState(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const title = params.get("editTitle");
+    if (title) setEditTitle(title);
+  }, []);
 
   // States for session title and the list of assignments
   const [title, setTitle] = useState("");
@@ -43,7 +48,7 @@ function GradeCalculator() {
       const fetchSessionAssignments = async () => {
         try {
           const userId = 1; // hardcoded for now
-          const response = await axios.get(`/api/Calculator/grade-entries/${userId}`);
+          const response = await axios.get(`http://localhost:8080/api/grade-calculator/grade-entries/${userId}`);
           // filter assignments matching this session title
           const sessionAssignments = response.data.filter(
             (a) => a.session_title === editTitle
@@ -143,13 +148,13 @@ function GradeCalculator() {
     try {
       for (let assignment of assignments) {
         if (assignment.id) {
-          await axios.put(`/api/Calculator/grade-entry/${editId}`, {
+          await axios.put(`http://localhost:8080/api/Calculator/grade-entry`, {
             assignment_grade: assignment.grade,
             assignment_weight: assignment.weight,
           });
         } else {
           // POST axios call to new-grade-entry. "If not editing, then create new session
-            await axios.post("/api/Calculator/new-grade-entry", {
+            await axios.post(`http://localhost:8080/api/grade-calculator/new-grade-entry`, {
               user_id: 1,
               assignment_type: assignment.assignment_type,
               assignment_name: assignment.assignment_name,

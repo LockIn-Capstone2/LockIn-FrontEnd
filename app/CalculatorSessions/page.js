@@ -18,41 +18,43 @@ function SavedSessions() {
 
   // State to store all saved sessions and user search text
   const [sessions, setSessions] = useState([]);
+  const [grades, setGrades] = useState([]);
   const [search, setSearch] = useState("");
 
-  // axios call to fetch user's saved sessions
+  const fetchGrades = async () => {
+    try {
+      const userId = 1;
+      const response = await axios.get(
+        `http://localhost:8080/api/grade-calculator/grade-entries/${userId}`
+      );
+      console.log(response.data);
+      setGrades(response.data);
+    } catch (error) {
+      console.error("Error fetching saved sessions: ", error);
+      // setSessions([]);
+    }
+  };
   useEffect(() => {
-    const fetchSessions = async () => {
-      try {
-        const userId = 1;
-        const response = await axios.get(`/api/Calculator/grade-entries/${userId}`);
-        setSessions(response.data);
-      } catch (error) {
-        console.error("Error fetching saved sessions: ", error);
-        setSessions([]);
-      }
-    };
-
-    fetchSessions();
+    fetchGrades();
   }, []);
 
   // axios function to delete a session via ID
   const handleDelete = async (id) => {
-  try {
-    await axios.delete(`/api/Calculator/grade-entry/${id}`);
-    // remove session from the session list
-    const updated = sessions.filter((session) => session.id !== id);
-    setSessions(updated);
-  } catch (error) {
-    console.error("Error deleting session: ", error);
-    alert("Failed to delete session. Please try again.");
-  }
-};
+    try {
+      await axios.delete(`http://localhost:8080/api/grade-calculator/grade-entry/${id}`);
+      // remove session from the session list
+      const updated = grades.filter((grade) => grade.id !== id);
+      setGrades(updated);
+    } catch (error) {
+      console.error("Error deleting session: ", error);
+      alert("Failed to delete session. Please try again.");
+    }
+  };
 
-// handle edit by redirecting user to Grade Calculator via entry ID 
-const handleEdit = (id) => {
-  router.push(`/GradeCalculator?editId=$[id]`);
-};
+  // handle edit by redirecting user to Grade Calculator via entry ID
+  const handleEdit = (id) => {
+    router.push(`/GradeCalculator?editId=$[id]`);
+  };
 
   // Filter sessions based on user search text input (note: case-insensitive)
   const filteredSessions = sessions.filter((session) =>
@@ -62,72 +64,61 @@ const handleEdit = (id) => {
   return (
     <div className="min-h-screen flex flex-col items-center bg-white p-6">
       {/* Page Title and "Save Session" button aligned right*/}
-      <div className= "relative w-full max-w-4xl mb-4 h-10 flex items-center">
-        <h1 className="absolute left-1/2 -translate-x-1/2 text-2xl font-bold">Saved Sessions</h1>
-        <Button className="ml-auto" onClick={() => router.push("/GradeCalculator")}>New Session</Button>
+      <div className="relative w-full max-w-4xl mb-4 h-10 flex items-center">
+        <h1 className="absolute left-1/2 -translate-x-1/2 text-2xl font-bold">
+          Saved Assignments
+        </h1>
+        <Button
+          className="ml-auto"
+          onClick={() => router.push("/GradeCalculator")}
+        >
+          New Session
+        </Button>
       </div>
 
       {/* Search Input */}
       <Input
         type="text"
-        placeholder="Search by session title"
+        placeholder="Search by assignment title"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         className="mb-4 w-full max-w-lg"
       />
 
       {/* List of filtered sessions */}
-      <div className="w-full max-w-4xl space-y-4">
-        {filteredSessions.map((session) => (
-          <Card
-            key={session.id}
-            className="p-4 flex justify-between items-center"
-          >
-            <div>
-              <CardHeader>
-                <CardTitle>{session.title}</CardTitle>
-              </CardHeader>
-              {/* Show calculated grade within session card*/}
-              {session.finalGrade && (
-                <p className="text-sm font-semibold">
-                  Final Grade: {session.finalGrade}
-                </p>
-              )}
-            </div>
+      {/* List of assignments */}
+<div className="w-full max-w-4xl space-y-4">
+  {grades.map((grade) => (
+    <Card key={grade.id} className="p-4 shadow-md rounded-2xl hover:shadow-lg transition">
+      <CardHeader>
+        <CardTitle className="text-lg font-semibold text-gray-800">
+          {grade.assignment_name}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="text-sm text-gray-600 space-y-1">
+        <p><span className="font-medium">Grade:</span> {grade.assignment_grade ?? "N/A"}</p>
+        <p><span className="font-medium">Weight:</span> {grade.assignment_weight ?? "N/A"}%</p>
+      </CardContent>
+      <CardFooter className="flex justify-end gap-3">
+        <Button variant="outline" size="sm" onClick={() => handleEdit(grade.id)}>
+          Edit
+        </Button>
+        <Button
+          variant="destructive"
+          size="sm"
+          onClick={() => handleDelete(grade.id)}
+        >
+          Delete
+        </Button>
+      </CardFooter>
+    </Card>
+  ))}
 
-            {/* Edit and Delete button via trash icon*/}
-            <CardFooter className="flex gap-3">
-              <Button variant="outline" onClick={() => handleEdit(session.id)}>Edit</Button>
+  {grades.length === 0 && (
+    <p className="text-center text-gray-500">No grades found.</p>
+  )}
+</div>
 
-              <button
-                type="button"
-                onClick={() => handleDelete(session.id)}
-                className="text-red-500 hover:text-red-700"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4m-4 0a1 1 0 00-1 1v1h6V4a1 1 0 00-1-1m-4 0h4"
-                  />
-                </svg>
-              </button>
-            </CardFooter>
-          </Card>
-        ))}
-
-        {/* Message to user when no sessions match their text search*/}
-        {filteredSessions.length === 0 && (
-          <p className="text-center text-gray-500">No sessions found.</p>
-        )}
-      </div>
     </div>
   );
 }
