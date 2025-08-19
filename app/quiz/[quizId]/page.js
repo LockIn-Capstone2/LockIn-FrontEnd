@@ -24,25 +24,74 @@ export default function QuizPage() {
   const [showAnswer, setShowAnswer] = useState(false);
   const [sessionId] = useState(`session_${Date.now()}`); // Unique session ID
   const [startTime] = useState(Date.now()); // Track session start time
+  const [user, setUser] = useState(null);
 
   const navigate = useRouter();
 
+  // Get current authenticated user
+  useEffect(() => {
+    const getCurrentUser = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:8080/api/progress/current-user",
+          {
+            credentials: "include",
+          }
+        );
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            // User not authenticated, redirect to login
+            navigate.push("/LogIn");
+            return;
+          }
+          throw new Error("Failed to fetch user data");
+        }
+
+        const userData = await response.json();
+        if (userData && userData.user) {
+          setUser(userData.user);
+        } else {
+          navigate.push("/LogIn");
+        }
+      } catch (error) {
+        console.error("Error fetching user:", error);
+        navigate.push("/LogIn");
+      }
+    };
+
+    getCurrentUser();
+  }, [navigate]);
+
   // Progress tracking function
   const recordQuizProgress = async (finalScore) => {
+    if (!user) {
+      console.error("No authenticated user found");
+      return;
+    }
+
     try {
       const duration = Date.now() - startTime;
 
-      await fetch("http://localhost:8080/api/progress/quiz-progress", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user_id: 1, // Replace with actual user ID from auth
-          ai_chat_history_id: quizId,
-          score: finalScore,
-          duration_ms: duration,
-          session_id: sessionId,
-        }),
-      });
+      const response = await fetch(
+        "http://localhost:8080/api/progress/quiz-progress",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            // Remove user_id - it's now extracted from JWT token
+            ai_chat_history_id: quizId,
+            score: finalScore,
+            duration_ms: duration,
+            session_id: sessionId,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to record quiz progress: ${response.status}`);
+      }
 
       console.log(`Quiz progress recorded: Score ${finalScore}%`);
     } catch (error) {
@@ -51,7 +100,7 @@ export default function QuizPage() {
   };
 
   useEffect(() => {
-    if (!quizId) return;
+    if (!quizId || !user) return;
 
     async function fetchData() {
       try {
@@ -59,7 +108,10 @@ export default function QuizPage() {
         setError(null);
 
         const res = await fetch(
-          `http://localhost:8080/api/chat/quiz/${quizId}`
+          `http://localhost:8080/api/chat/quiz/${quizId}`,
+          {
+            credentials: "include",
+          }
         );
 
         if (!res.ok) {
@@ -100,7 +152,7 @@ export default function QuizPage() {
     }
 
     fetchData();
-  }, [quizId]);
+  }, [quizId, user]);
 
   // Determine if it's a quiz
   const isQuiz =
@@ -150,6 +202,18 @@ export default function QuizPage() {
     setSelectedAnswer(null);
     setShowAnswer(false);
   };
+
+  // Don't render anything until we have user data
+  if (!user) {
+    return (
+      <div className="p-8 text-center">
+        <Hourglass size="40" bgOpacity="0.1" speed="1.75" color="white" />
+        <div className="text-lg text-white font-[poppins]">
+          Authenticating user...
+        </div>
+      </div>
+    );
+  }
 
   // Loading state
   if (loading) {
