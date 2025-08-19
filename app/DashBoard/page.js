@@ -30,7 +30,10 @@ import { ProgressAreaChart } from "@/components/UserAreaChart/AreaChart";
 import { WeeklyActivityBarChart } from "@/components/UserBarChart/BarChart";
 import { StreakProgressRadialChart } from "@/components/UserRadialChart/RadialChart";
 import ThemeToggleButton from "@/components/ui/theme-toggle-button";
-
+import StudyTimerData from "@/components/UserStudyData/StudyTimerData";
+import { useParams } from "next/navigation";
+import { useCallback } from "react";
+import axios from "axios";
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
 
 // ---------- Utilities ----------
@@ -356,6 +359,37 @@ export default function Dashboard() {
     }
   };
 
+  const [studyData, setStudyData] = useState([]);
+  const { userId } = useParams();
+
+  const getData = useCallback(async () => {
+    try {
+      const response = await axios.get(`http://localhost:8080/api/data`, {
+        withCredentials: true,
+      });
+      const result = response.data;
+      setStudyData(result);
+      console.log("data:", result);
+    } catch (error) {
+      console.error("error:", error);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    getData();
+  }, [getData]);
+
+  function durationToMinutes(durationStr) {
+    const [hours, minutes, seconds] = durationStr.split(":").map(Number);
+    return hours * 60 + minutes + seconds / 60;
+  }
+
+  const data = studyData.map((item) => ({
+    ...item,
+    formattedDate: item.formattedDate,
+    duration: durationToMinutes(item.duration),
+  }));
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -662,6 +696,19 @@ export default function Dashboard() {
                 </div>
               </div>
             )}
+
+            <div className="bg-card rounded-lg border border-border p-6 hover:shadow-lg transition-all duration-300 group">
+              <div className="mb-4">
+                <h3 className="flex items-center space-x-2 text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
+                  <IconClock className="w-5 h-5" />
+                  <span>Study Time Analysis</span>
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Time spent studying each day
+                </p>
+              </div>
+              {data ? <StudyTimerData data={data} /> : <EmptyChart />}
+            </div>
 
             {/* Performance */}
             {activeTab === "performance" && (
