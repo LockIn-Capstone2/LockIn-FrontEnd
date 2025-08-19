@@ -32,7 +32,6 @@ import { StreakProgressRadialChart } from "@/components/UserRadialChart/RadialCh
 import ThemeToggleButton from "@/components/ui/theme-toggle-button";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
-const USER_ID = 1; // replace with your auth logic/localStorage if needed
 
 // ---------- Utilities ----------
 const isNonEmptyArray = (arr) => Array.isArray(arr) && arr.length > 0;
@@ -140,6 +139,7 @@ const EmptyChart = ({
 );
 
 export default function Dashboard() {
+  const [user, setUser] = useState(null);
   const [activeTab, setActiveTab] = useState("overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -155,6 +155,41 @@ export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
   const pathname = usePathname();
+
+  // Get current user on component mount
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await fetch(`${API_BASE}/progress/current-user`, {
+          credentials: "include",
+        });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            // User not authenticated, redirect to login
+            router.push("/LogIn");
+            return;
+          }
+          throw new Error("Failed to fetch user data");
+        }
+
+        const userData = await response.json();
+        if (userData && userData.user) {
+          setUser(userData.user);
+        } else {
+          // No user data, redirect to login
+          router.push("/LogIn");
+          return;
+        }
+      } catch (error) {
+        console.error("Error fetching user:", error);
+        router.push("/LogIn");
+        return;
+      }
+    };
+
+    fetchUser();
+  }, [router]);
 
   // Derived values with safe access
   const currentStats = dashboardData || {};
@@ -216,6 +251,8 @@ export default function Dashboard() {
 
   // -------------- Fetch --------------
   useEffect(() => {
+    if (!user) return; // Don't fetch data until user is loaded
+
     let alive = true;
     const fetchAll = async () => {
       try {
@@ -223,10 +260,18 @@ export default function Dashboard() {
         setError(null);
 
         const [dashRes, streakRes, chartRes, badgeRes] = await Promise.all([
-          fetch(`${API_BASE}/progress/summary/${USER_ID}`),
-          fetch(`${API_BASE}/sessions/streak/${USER_ID}`),
-          fetch(`${API_BASE}/progress/daily-chart/${USER_ID}`),
-          fetch(`${API_BASE}/badges/progress/${USER_ID}`),
+          fetch(`${API_BASE}/progress/summary`, {
+            credentials: "include",
+          }),
+          fetch(`${API_BASE}/sessions/streak`, {
+            credentials: "include",
+          }),
+          fetch(`${API_BASE}/progress/daily-chart`, {
+            credentials: "include",
+          }),
+          fetch(`${API_BASE}/badges/progress`, {
+            credentials: "include",
+          }),
         ]);
 
         if (!dashRes.ok || !streakRes.ok || !chartRes.ok || !badgeRes.ok) {
@@ -272,19 +317,42 @@ export default function Dashboard() {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [user]);
 
   const markBadgeAsViewed = async (badgeId) => {
     try {
-      const res = await fetch(`${API_BASE}/badges/view/${USER_ID}/${badgeId}`, {
+      const res = await fetch(`${API_BASE}/badges/view/${badgeId}`, {
         method: "PUT",
+        credentials: "include",
       });
       if (res.ok) {
-        const br = await fetch(`${API_BASE}/badges/progress/${USER_ID}`);
+        const br = await fetch(`${API_BASE}/badges/progress`, {
+          credentials: "include",
+        });
         if (br.ok) setBadgeData(await br.json());
       }
     } catch (e) {
       console.error("markBadgeAsViewed error", e);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch(`${API_BASE}/signup/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
+
+      // Clear any local storage or state
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("user");
+        // Redirect to login page
+        window.location.href = "/LogIn";
+      }
+    } catch (error) {
+      console.error("Error during logout:", error);
+      // Still redirect even if logout fails
+      window.location.href = "/LogIn";
     }
   };
 
@@ -314,6 +382,17 @@ export default function Dashboard() {
           >
             Try Again
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading user data…</p>
         </div>
       </div>
     );
@@ -363,15 +442,15 @@ export default function Dashboard() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground truncate">
-                  User {USER_ID}
+                  {user.username}
                 </p>
                 <p className="text-xs text-muted-foreground truncate">
-                  ID: {USER_ID}
+                  ID: {user.id}
                 </p>
               </div>
             </div>
             <button
-              onClick={() => router.push("/LogIn")}
+              onClick={handleLogout}
               className="w-full flex items-center justify-center space-x-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-all"
             >
               <IconLogout className="w-4 h-4" />
@@ -414,7 +493,7 @@ export default function Dashboard() {
                   <IconUser className="w-4 h-4 text-white" />
                 </div>
                 <span className="hidden sm:inline font-medium text-foreground">
-                  User {USER_ID}
+                  {user.username}
                 </span>
                 <IconEdit className="w-4 h-4 text-muted-foreground" />
               </button>
@@ -846,7 +925,7 @@ export default function Dashboard() {
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-foreground">
-                    User {USER_ID}
+                    {user.username}
                   </h3>
                   <p className="text-sm text-muted-foreground">
                     Active Learner
@@ -862,7 +941,7 @@ export default function Dashboard() {
                   </label>
                   <input
                     type="text"
-                    defaultValue={`User ${USER_ID}`}
+                    defaultValue={user.username}
                     className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
                     placeholder="Enter your display name"
                   />
@@ -874,7 +953,7 @@ export default function Dashboard() {
                   </label>
                   <input
                     type="email"
-                    defaultValue="user@example.com"
+                    defaultValue={user.email || "user@example.com"}
                     className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
                     placeholder="Enter your email"
                   />
