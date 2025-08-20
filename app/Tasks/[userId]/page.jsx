@@ -94,7 +94,7 @@ export default function TasksPage({ params }) {
   const handleEditTask = async () => {
     try {
       await axios.put(
-        `https://capstone-2-backend-seven.vercel.app/api/tasks/${userId}/${editTask.id}`,
+        `http://localhost:8080/api/tasks/${userId}/${editTask.id}`,
         editTask
       );
       setEditTask(null);

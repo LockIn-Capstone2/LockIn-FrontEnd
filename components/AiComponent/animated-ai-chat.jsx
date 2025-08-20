@@ -262,7 +262,7 @@ export default function AnimatedAIChat() {
         setIsTyping(true);
       });
 
-      const url = "https://capstone-2-backend-seven.vercel.app/api/chat";
+      const url = "http://localhost:8080/api/chat";
       const response = await fetch(url, {
         method: "POST",
         headers: {

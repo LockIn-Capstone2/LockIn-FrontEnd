@@ -92,7 +92,7 @@ function StudyTimer() {
     const duration = formatTimeForDatabase(totalDuration);
     try {
       const response = await axios.post(
-        `https://capstone-2-backend-seven.vercel.app/api/data/${userId}`,
+        `http://localhost:8080/api/data/${userId}`,
         {
           duration: duration,
         }
