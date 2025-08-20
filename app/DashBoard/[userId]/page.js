@@ -31,7 +31,9 @@ import { WeeklyActivityBarChart } from "@/components/UserBarChart/BarChart";
 import { StreakProgressRadialChart } from "@/components/UserRadialChart/RadialChart";
 import ThemeToggleButton from "@/components/ui/theme-toggle-button";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_URL ||
+  "https://capstone-2-backend-seven.vercel.app/api";
 
 // ---------- Utilities ----------
 const isNonEmptyArray = (arr) => Array.isArray(arr) && arr.length > 0;

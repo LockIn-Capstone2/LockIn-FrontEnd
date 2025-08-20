@@ -22,7 +22,9 @@ import {
   CalculatorSelectValue,
 } from "@/components/ui/calculator-select";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_URL ||
+  "https://capstone-2-backend-seven.vercel.app/api";
 
 function GradeCalculator() {
   const router = useRouter();
