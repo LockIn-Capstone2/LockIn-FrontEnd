@@ -360,7 +360,6 @@ export default function Dashboard() {
   };
 
   const [studyData, setStudyData] = useState([]);
-  const { userId } = useParams();
 
   const getData = useCallback(async () => {
     try {
@@ -373,7 +372,7 @@ export default function Dashboard() {
     } catch (error) {
       console.error("error:", error);
     }
-  }, [userId]);
+  }, []);
 
   useEffect(() => {
     getData();

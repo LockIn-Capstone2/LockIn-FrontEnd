@@ -15,7 +15,6 @@ import React from "react";
 import { Alert } from "@mui/material";
 
 function StudyTimer() {
-  const userId = 3;
   const [hours, setHours] = useState("");
   const [minutes, setMinutes] = useState("");
   const [seconds, setSeconds] = useState("");
@@ -92,9 +91,12 @@ function StudyTimer() {
     const duration = formatTimeForDatabase(totalDuration);
     try {
       const response = await axios.post(
-        `http://localhost:8080/api/data/${userId}`,
+        `http://localhost:8080/api/data/`,
         {
           duration: duration,
+        },
+        {
+          withCredentials: true,
         }
       );
     } catch (error) {
