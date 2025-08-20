@@ -29,7 +29,7 @@ export default function FlashcardPage() {
       try {
         console.log("Fetching current user...");
         const response = await fetch(
-          "https://capstone-2-backend-seven.vercel.app/api/progress/current-user",
+          "http://localhost:8080/api/progress/current-user",
           {
             credentials: "include",
           }
@@ -77,7 +77,7 @@ export default function FlashcardPage() {
       const duration = Date.now() - startTime;
 
       const response = await fetch(
-        "https://capstone-2-backend-seven.vercel.app/api/progress/flashcard-progress",
+        "http://localhost:8080/api/progress/flashcard-progress",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -110,14 +110,11 @@ export default function FlashcardPage() {
     }
 
     try {
-      const response = await fetch(
-        "https://capstone-2-backend-seven.vercel.app/api/sessions/start",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-        }
-      );
+      const response = await fetch("http://localhost:8080/api/sessions/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -141,14 +138,11 @@ export default function FlashcardPage() {
     if (!user) return;
 
     try {
-      const response = await fetch(
-        "https://capstone-2-backend-seven.vercel.app/api/sessions/end",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-        }
-      );
+      const response = await fetch("http://localhost:8080/api/sessions/end", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
 
       if (!response.ok) {
         throw new Error(`Failed to end session: ${response.status}`);
@@ -182,7 +176,7 @@ export default function FlashcardPage() {
         setError(null);
 
         const res = await fetch(
-          `https://capstone-2-backend-seven.vercel.app/api/chat/flashcards/${flashcardId}`,
+          `http://localhost:8080/api/chat/flashcards/${flashcardId}`,
           {
             credentials: "include",
           }
