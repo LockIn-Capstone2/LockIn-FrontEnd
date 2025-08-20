@@ -118,8 +118,9 @@ export default function Signup() {
     }
 
     try {
+      // Use the correct endpoint based on backend structure
       const res = await axios.post(
-        `http://localhost:8080/api/signup`,
+        `http://localhost:8080/auth/signup`,
         {
           firstName,
           lastName,
@@ -133,7 +134,7 @@ export default function Signup() {
       );
 
       if (res.data.message === "User created successfully") {
-        setAlertMessage("Signed up successfully! Redirecting...");
+        setAlertMessage("Signed up successfully! Logging you in...");
         setAlertSeverity("success");
         setAlertOpen(true);
 
@@ -146,10 +147,41 @@ export default function Signup() {
         setPasswordStrength(null);
         setPasswordErrors([]);
 
-        // Redirect after 2 seconds
-        setTimeout(() => {
-          navigate.push("/LogIn");
-        }, 1500);
+        // Automatically log in the user after successful signup
+        try {
+          const loginRes = await axios.post(
+            `http://localhost:8080/auth/login`,
+            {
+              username,
+              password,
+            },
+            {
+              withCredentials: true,
+            }
+          );
+
+          if (
+            loginRes.data.message === "Login successful" &&
+            loginRes.data.user &&
+            loginRes.data.user.id
+          ) {
+            // Redirect to the user's dashboard
+            setTimeout(() => {
+              navigate.push(`/DashBoard/${loginRes.data.user.id}`);
+            }, 2000);
+          } else {
+            // Fallback: redirect to login page
+            setTimeout(() => {
+              navigate.push("/LogIn");
+            }, 2000);
+          }
+        } catch (loginError) {
+          console.error("Auto-login failed:", loginError);
+          // If auto-login fails, redirect to login page
+          setTimeout(() => {
+            navigate.push("/LogIn");
+          }, 2000);
+        }
       } else {
         throw new Error("Signup failed - unexpected response");
       }
@@ -159,7 +191,10 @@ export default function Signup() {
       let errorMessage = "Sign-up failed";
 
       if (error.response) {
-        if (error.response.status === 409) {
+        if (error.response.status === 404) {
+          errorMessage =
+            "Signup endpoint not found. Please check your backend configuration.";
+        } else if (error.response.status === 409) {
           errorMessage =
             "Username or email already exists. Please choose different credentials.";
         } else if (error.response.status === 400) {
@@ -267,12 +302,6 @@ export default function Signup() {
                 <div className="grid gap-2">
                   <div className="flex items-center">
                     <Label htmlFor="password">Password</Label>
-                    {/* <a
-                    href="#"
-                    className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-                    >
-                    Forgot your password?
-                    </a> */}
                   </div>
                   <Input
                     id="password"
@@ -303,9 +332,6 @@ export default function Signup() {
                 >
                   Sign Up
                 </Button>
-                {/* <Button variant="outline" className="w-full">
-                Sign Up with Google
-                </Button> */}
               </div>
             </form>
           </CardContent>

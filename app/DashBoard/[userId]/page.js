@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useParams } from "next/navigation";
 import {
   IconClock,
   IconUser,
@@ -153,6 +153,7 @@ export default function Dashboard() {
 
   const [profileSheetOpen, setProfileSheetOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const { userId } = useParams();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -176,6 +177,12 @@ export default function Dashboard() {
         const userData = await response.json();
         if (userData && userData.user) {
           setUser(userData.user);
+
+          if (userData.user.id.toString() !== userId) {
+            // URL userId doesn't match authenticated user, redirect to their dashboard
+            router.push(`/DashBoard/${userData.user.id}`); // Fixed: DashBoard with capital B
+            return;
+          }
         } else {
           // No user data, redirect to login
           router.push("/LogIn");
@@ -189,7 +196,7 @@ export default function Dashboard() {
     };
 
     fetchUser();
-  }, [router]);
+  }, [router, userId]);
 
   // Derived values with safe access
   const currentStats = dashboardData || {};
@@ -210,12 +217,15 @@ export default function Dashboard() {
   const accuracyRate = Number(currentStats.all_time?.flashAccuracy || 0);
 
   // nav items
+  // ... existing code ...
+
+  // nav items
   const navigationItems = [
     {
       icon: IconHome,
       label: "Dashboard",
-      href: "/DashBoard",
-      active: pathname === "/DashBoard",
+      href: `/DashBoard/${user?.id}`, // Fixed: DashBoard with capital B
+      active: pathname === `/DashBoard/${user?.id}`, // Fixed: DashBoard with capital B
     },
     {
       icon: IconBook,
@@ -226,13 +236,13 @@ export default function Dashboard() {
     {
       icon: IconTarget,
       label: "Goals",
-      href: "/Tasks",
+      href: "/Tasks", // Removed userId since Tasks might not be dynamic
       active: pathname === "/Tasks",
     },
     {
       icon: IconChartPie,
       label: "Analytics",
-      href: "/ChartData",
+      href: "/ChartData", // Removed userId since ChartData might not be dynamic
       active: pathname === "/ChartData",
     },
     {

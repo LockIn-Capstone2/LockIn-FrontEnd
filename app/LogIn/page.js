@@ -62,9 +62,18 @@ function LogIn() {
         setAlertSeverity("success");
         setAlertOpen(true);
 
-        setTimeout(() => {
-          navigate.push("/DashBoard");
-        }, 1500);
+        // Get the user data from the response to extract the user ID
+        if (response.data.user && response.data.user.id) {
+          // Redirect to the user's specific dashboard
+          setTimeout(() => {
+            navigate.push(`/DashBoard/${response.data.user.id}`);
+          }, 1500);
+        } else {
+          // Fallback to home if no user data
+          setTimeout(() => {
+            navigate.push("/");
+          }, 1500);
+        }
       } else {
         throw new Error("Login failed - unexpected response");
       }

@@ -19,6 +19,7 @@ export default function FlashcardPage() {
   const [sessionId] = useState(`session_${Date.now()}`);
   const [startTime] = useState(Date.now());
   const [user, setUser] = useState(null);
+  const [completedCards, setCompletedCards] = useState(new Set());
 
   const navigate = useRouter();
 
@@ -26,6 +27,7 @@ export default function FlashcardPage() {
   useEffect(() => {
     const getCurrentUser = async () => {
       try {
+        console.log("Fetching current user...");
         const response = await fetch(
           "http://localhost:8080/api/progress/current-user",
           {
@@ -33,9 +35,12 @@ export default function FlashcardPage() {
           }
         );
 
+        console.log("User response status:", response.status);
+
         if (!response.ok) {
           if (response.status === 401) {
             // User not authenticated, redirect to login
+            console.log("User not authenticated, redirecting to login");
             navigate.push("/LogIn");
             return;
           }
@@ -43,9 +48,13 @@ export default function FlashcardPage() {
         }
 
         const userData = await response.json();
+        console.log("User data received:", userData);
+
         if (userData && userData.user) {
           setUser(userData.user);
+          console.log("User set:", userData.user);
         } else {
+          console.log("No user data, redirecting to login");
           navigate.push("/LogIn");
         }
       } catch (error) {
@@ -56,9 +65,6 @@ export default function FlashcardPage() {
 
     getCurrentUser();
   }, [navigate]);
-
-  // Progress tracking function
-  // ... existing code ...
 
   // Progress tracking function
   const recordProgress = async (cardIndex, isCorrect) => {
@@ -77,7 +83,6 @@ export default function FlashcardPage() {
           headers: { "Content-Type": "application/json" },
           credentials: "include",
           body: JSON.stringify({
-            // Remove user_id - it's now extracted from JWT token
             ai_chat_history_id: flashcardId,
             card_index: cardIndex,
             is_correct: isCorrect,
@@ -99,25 +104,33 @@ export default function FlashcardPage() {
     }
   };
 
-  // ... existing code ...
   const startSession = async () => {
-    if (!user) return;
+    if (!user) {
+      throw new Error("No authenticated user found");
+    }
 
     try {
       const response = await fetch("http://localhost:8080/api/sessions/start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        // Remove body since user ID comes from JWT token
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to start session: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          `Failed to start session: ${response.status} - ${
+            errorData.error || errorData.details || "Unknown error"
+          }`
+        );
       }
 
-      console.log("Session started");
+      const result = await response.json();
+      console.log("Session started:", result);
+      return result;
     } catch (err) {
       console.error("Failed to start session:", err);
+      throw err; // Re-throw to be handled by caller
     }
   };
 
@@ -129,7 +142,6 @@ export default function FlashcardPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        // Remove body since user ID comes from JWT token
       });
 
       if (!response.ok) {
@@ -145,7 +157,18 @@ export default function FlashcardPage() {
   useEffect(() => {
     if (!flashcardId || !user) return;
 
-    startSession();
+    async function initializeSession() {
+      try {
+        // First try to start the session
+        await startSession();
+
+        // Then fetch the flashcard data
+        await fetchData();
+      } catch (error) {
+        console.error("Failed to initialize session:", error);
+        setError("Failed to start study session. Please try logging in again.");
+      }
+    }
 
     async function fetchData() {
       try {
@@ -187,7 +210,7 @@ export default function FlashcardPage() {
       }
     }
 
-    fetchData();
+    initializeSession();
 
     return () => {
       endSession();
@@ -227,16 +250,33 @@ export default function FlashcardPage() {
     }
   };
 
-  // Handle flashcard answer (correct/incorrect)
+  // Handle flashcard answer (correct/incorrect) with auto-advance
   const handleFlashcardAnswer = async (isCorrect) => {
     // Record progress for the current card
     await recordProgress(currentIndex, isCorrect);
 
-    // You could add UI feedback here
+    // Mark this card as completed
+    setCompletedCards((prev) => new Set([...prev, currentIndex]));
+
+    // Auto-advance to next card after a short delay
+    setTimeout(() => {
+      const next = currentIndex + 1;
+      if (next < data.length) {
+        setCurrentIndex(next);
+        setShowAnswer(false);
+      } else {
+        // All cards completed, redirect to dashboard
+        navigate.push(`/DashBoard/${user.id}`);
+      }
+    }, 1000); // 1 second delay to show the answer feedback
+
     console.log(
       `Card ${currentIndex + 1}: ${isCorrect ? "Correct" : "Incorrect"}`
     );
   };
+
+  // Check if all cards are completed
+  const allCardsCompleted = data && completedCards.size === data.length;
 
   // Don't render anything until we have user data
   if (!user) {
@@ -292,6 +332,7 @@ export default function FlashcardPage() {
     const current = data[currentIndex];
     const frontText = current.front || current.question;
     const backText = current.back || current.answer || current.correct;
+    const isCardCompleted = completedCards.has(currentIndex);
 
     return (
       <div className="relative min-h-screen">
@@ -311,6 +352,9 @@ export default function FlashcardPage() {
             {/* Progress indicator */}
             <div className="text-center mb-8 font-[poppins]">
               Card {currentIndex + 1} of {data.length}
+              <div className="text-sm text-gray-500 mt-2">
+                Completed: {completedCards.size}/{data.length}
+              </div>
             </div>
 
             {/* Flashcard */}
@@ -324,6 +368,11 @@ export default function FlashcardPage() {
                 <div>
                   <h2 className="text-2xl mb-4 font-[poppins]">Answer</h2>
                   <p className="text-lg font-[poppins]">{backText}</p>
+                  {isCardCompleted && (
+                    <div className="mt-4 text-sm text-green-600">
+                      ✓ Card completed
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -385,6 +434,18 @@ export default function FlashcardPage() {
                 Next →
               </button>
             </div>
+
+            {/* Completion message */}
+            {allCardsCompleted && (
+              <div className="text-center mt-8 p-4 bg-green-100 rounded-lg">
+                <div className="text-xl text-green-800 font-[poppins] mb-2">
+                  🎉 All flashcards completed!
+                </div>
+                <div className="text-green-600 font-[poppins]">
+                  Redirecting to dashboard...
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
