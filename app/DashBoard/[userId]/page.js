@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useParams } from "next/navigation";
 import {
   IconClock,
   IconUser,
@@ -30,10 +30,7 @@ import { ProgressAreaChart } from "@/components/UserAreaChart/AreaChart";
 import { WeeklyActivityBarChart } from "@/components/UserBarChart/BarChart";
 import { StreakProgressRadialChart } from "@/components/UserRadialChart/RadialChart";
 import ThemeToggleButton from "@/components/ui/theme-toggle-button";
-import StudyTimerData from "@/components/UserStudyData/StudyTimerData";
-import { useParams } from "next/navigation";
-import { useCallback } from "react";
-import axios from "axios";
+
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
 
 // ---------- Utilities ----------
@@ -156,6 +153,7 @@ export default function Dashboard() {
 
   const [profileSheetOpen, setProfileSheetOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const { userId } = useParams();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -179,6 +177,12 @@ export default function Dashboard() {
         const userData = await response.json();
         if (userData && userData.user) {
           setUser(userData.user);
+
+          if (userData.user.id.toString() !== userId) {
+            // URL userId doesn't match authenticated user, redirect to their dashboard
+            router.push(`/DashBoard/${userData.user.id}`); // Fixed: DashBoard with capital B
+            return;
+          }
         } else {
           // No user data, redirect to login
           router.push("/LogIn");
@@ -192,7 +196,7 @@ export default function Dashboard() {
     };
 
     fetchUser();
-  }, [router]);
+  }, [router, userId]);
 
   // Derived values with safe access
   const currentStats = dashboardData || {};
@@ -213,12 +217,15 @@ export default function Dashboard() {
   const accuracyRate = Number(currentStats.all_time?.flashAccuracy || 0);
 
   // nav items
+  // ... existing code ...
+
+  // nav items
   const navigationItems = [
     {
       icon: IconHome,
       label: "Dashboard",
-      href: "/DashBoard",
-      active: pathname === "/DashBoard",
+      href: `/DashBoard/${user?.id}`, // Fixed: DashBoard with capital B
+      active: pathname === `/DashBoard/${user?.id}`, // Fixed: DashBoard with capital B
     },
     {
       icon: IconBook,
@@ -229,13 +236,13 @@ export default function Dashboard() {
     {
       icon: IconTarget,
       label: "Goals",
-      href: "/Tasks",
+      href: "/Tasks", // Removed userId since Tasks might not be dynamic
       active: pathname === "/Tasks",
     },
     {
       icon: IconChartPie,
       label: "Analytics",
-      href: "/ChartData",
+      href: "/ChartData", // Removed userId since ChartData might not be dynamic
       active: pathname === "/ChartData",
     },
     {
@@ -358,37 +365,6 @@ export default function Dashboard() {
       window.location.href = "/LogIn";
     }
   };
-
-  const [studyData, setStudyData] = useState([]);
-  const { userId } = useParams();
-
-  const getData = useCallback(async () => {
-    try {
-      const response = await axios.get(`http://localhost:8080/api/data`, {
-        withCredentials: true,
-      });
-      const result = response.data;
-      setStudyData(result);
-      console.log("data:", result);
-    } catch (error) {
-      console.error("error:", error);
-    }
-  }, [userId]);
-
-  useEffect(() => {
-    getData();
-  }, [getData]);
-
-  function durationToMinutes(durationStr) {
-    const [hours, minutes, seconds] = durationStr.split(":").map(Number);
-    return hours * 60 + minutes + seconds / 60;
-  }
-
-  const data = studyData.map((item) => ({
-    ...item,
-    formattedDate: item.formattedDate,
-    duration: durationToMinutes(item.duration),
-  }));
 
   if (loading) {
     return (
@@ -696,19 +672,6 @@ export default function Dashboard() {
                 </div>
               </div>
             )}
-
-            <div className="bg-card rounded-lg border border-border p-6 hover:shadow-lg transition-all duration-300 group">
-              <div className="mb-4">
-                <h3 className="flex items-center space-x-2 text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
-                  <IconClock className="w-5 h-5" />
-                  <span>Study Time Analysis</span>
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  Time spent studying each day
-                </p>
-              </div>
-              {data ? <StudyTimerData data={data} /> : <EmptyChart />}
-            </div>
 
             {/* Performance */}
             {activeTab === "performance" && (
