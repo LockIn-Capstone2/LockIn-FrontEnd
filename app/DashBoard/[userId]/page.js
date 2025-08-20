@@ -229,33 +229,27 @@ export default function Dashboard() {
     },
     {
       icon: IconBook,
-      label: "Study Sessions",
+      label: "Study Timer",
       href: "/StudySession",
       active: pathname === "/StudySession",
     },
     {
-      icon: IconTarget,
-      label: "Goals",
-      href: "/Tasks", // Removed userId since Tasks might not be dynamic
-      active: pathname === "/Tasks",
-    },
-    {
       icon: IconChartPie,
-      label: "Analytics",
-      href: "/ChartData", // Removed userId since ChartData might not be dynamic
-      active: pathname === "/ChartData",
+      label: "Grade Calculator",
+      href: "/GradeCalculator", // Removed userId since ChartData might not be dynamic
+      active: pathname === "/GradeCalculator",
     },
     {
       icon: IconUsers,
-      label: "Community",
-      href: "/community",
-      active: pathname === "/community",
+      label: "Tasks",
+      href: "/Tasks",
+      active: pathname === "/Tasks",
     },
     {
       icon: IconSettings,
-      label: "Settings",
-      href: "/settings",
-      active: pathname === "/settings",
+      label: "Study with AI",
+      href: "/LockInChat",
+      active: pathname === "/LockInChat",
     },
   ];
 
