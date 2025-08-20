@@ -43,7 +43,7 @@ export default function NavBarComponent() {
   const checkAuth = async () => {
     try {
       const response = await fetch(
-        "http://localhost:8080/api/progress/current-user",
+        "https://capstone-2-backend-seven.vercel.app/api/progress/current-user",
         {
           credentials: "include",
         }
@@ -75,10 +75,13 @@ export default function NavBarComponent() {
   // Handle logout
   const handleLogout = async () => {
     try {
-      const response = await fetch("http://localhost:8080/api/signup/logout", {
-        method: "POST",
-        credentials: "include",
-      });
+      const response = await fetch(
+        "https://capstone-2-backend-seven.vercel.app/api/signup/logout",
+        {
+          method: "POST",
+          credentials: "include",
+        }
+      );
 
       if (response.ok) {
         // Clear user state immediately

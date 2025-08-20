@@ -33,7 +33,7 @@ export default function QuizPage() {
     const getCurrentUser = async () => {
       try {
         const response = await fetch(
-          "http://localhost:8080/api/progress/current-user",
+          "https://capstone-2-backend-seven.vercel.app/api/progress/current-user",
           {
             credentials: "include",
           }
@@ -74,7 +74,7 @@ export default function QuizPage() {
       const duration = Date.now() - startTime;
 
       const response = await fetch(
-        "http://localhost:8080/api/progress/quiz-progress",
+        "https://capstone-2-backend-seven.vercel.app/api/progress/quiz-progress",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -108,7 +108,7 @@ export default function QuizPage() {
         setError(null);
 
         const res = await fetch(
-          `http://localhost:8080/api/chat/quiz/${quizId}`,
+          `https://capstone-2-backend-seven.vercel.app/api/chat/quiz/${quizId}`,
           {
             credentials: "include",
           }

@@ -120,7 +120,7 @@ export default function Signup() {
     try {
       // Use the correct endpoint based on backend structure
       const res = await axios.post(
-        `http://localhost:8080/auth/signup`,
+        `https://capstone-2-backend-seven.vercel.app/auth/signup`,
         {
           firstName,
           lastName,
@@ -150,7 +150,7 @@ export default function Signup() {
         // Automatically log in the user after successful signup
         try {
           const loginRes = await axios.post(
-            `http://localhost:8080/auth/login`,
+            `https://capstone-2-backend-seven.vercel.app/auth/login`,
             {
               username,
               password,

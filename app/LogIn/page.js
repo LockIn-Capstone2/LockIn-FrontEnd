@@ -45,7 +45,7 @@ function LogIn() {
 
     try {
       const response = await axios.post(
-        `http://localhost:8080/api/signup/login`,
+        `https://capstone-2-backend-seven.vercel.app/api/signup/login`,
         {
           username,
           password,
