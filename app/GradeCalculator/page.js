@@ -22,8 +22,13 @@ import {
   CalculatorSelectValue,
 } from "@/components/ui/calculator-select";
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
+
 function GradeCalculator() {
   const router = useRouter();
+  const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
   // State for session title and the list of assignments
   const [title, setTitle] = useState("");
   const [assignments, setAssignments] = useState([
@@ -32,6 +37,48 @@ function GradeCalculator() {
 
   // state to hold calculated final grade
   const [finalGrade, setFinalGrade] = useState(null);
+
+  // Check if user is authenticated
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await fetch(`${API_BASE}/progress/current-user`, {
+          credentials: "include",
+        });
+
+        if (response.ok) {
+          const userData = await response.json();
+          if (userData && userData.user) {
+            setUser(userData.user);
+          } else {
+            setUser(null);
+            router.push("/LogIn");
+          }
+        } else {
+          setUser(null);
+          router.push("/LogIn");
+        }
+      } catch (error) {
+        console.error("Error checking authentication:", error);
+        setUser(null);
+        router.push("/LogIn");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, [router]);
+
+  // Don't render while checking authentication
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  // Don't render if no user
+  if (!user) {
+    return null;
+  }
 
   // handle general changes to assignment fields
   const handleChange = (index, field, value) => {
@@ -117,10 +164,35 @@ function GradeCalculator() {
     <div className="min-h-screen flex items-center justify-center bg-white">
       <Card className="w-full max-w-4xl p-6">
         <CardHeader>
-          <CardTitle>Grade Calculator</CardTitle>
-          <CardDescription>
-            Enter grades and weights to calculate your grade.
-          </CardDescription>
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle>Grade Calculator</CardTitle>
+              <CardDescription>
+                Enter grades and weights to calculate your grade.
+              </CardDescription>
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => router.push(`/DashBoard/${user.id}`)}
+              className="flex items-center gap-2"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                />
+              </svg>
+              Back to Dashboard
+            </Button>
+          </div>
         </CardHeader>
 
         <CardContent className="space-y-4">
@@ -155,10 +227,16 @@ function GradeCalculator() {
                   <CalculatorSelectValue placeholder="Select Type" />
                 </CalculatorSelectTrigger>
                 <CalculatorSelectContent>
-                  <CalculatorSelectItem value="Homework">Homework</CalculatorSelectItem>
+                  <CalculatorSelectItem value="Homework">
+                    Homework
+                  </CalculatorSelectItem>
                   <CalculatorSelectItem value="Quiz">Quiz</CalculatorSelectItem>
-                  <CalculatorSelectItem value="Midterm">Midterm</CalculatorSelectItem>
-                  <CalculatorSelectItem value="Final Exam">Final Exam</CalculatorSelectItem>
+                  <CalculatorSelectItem value="Midterm">
+                    Midterm
+                  </CalculatorSelectItem>
+                  <CalculatorSelectItem value="Final Exam">
+                    Final Exam
+                  </CalculatorSelectItem>
                 </CalculatorSelectContent>
               </CalculatorSelect>
 
