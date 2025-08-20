@@ -7,9 +7,12 @@ import ThemeToggleButton from "@/components/ui/theme-toggle-button";
 import { Hourglass } from "ldrs/react";
 import "ldrs/react/Hourglass.css";
 import { GradientBars } from "@/components/ui/gradient-bars";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function QuizPage() {
   const { quizId } = useParams();
+  const { user, loading: authLoading } = useAuth(); // Use auth context instead of local state
+  const navigate = useRouter();
 
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
@@ -22,46 +25,8 @@ export default function QuizPage() {
   const [showScore, setShowScore] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [showAnswer, setShowAnswer] = useState(false);
-  const [sessionId] = useState(`session_${Date.now()}`); // Unique session ID
-  const [startTime] = useState(Date.now()); // Track session start time
-  const [user, setUser] = useState(null);
-
-  const navigate = useRouter();
-
-  // Get current authenticated user
-  useEffect(() => {
-    const getCurrentUser = async () => {
-      try {
-        const response = await fetch(
-          "http://localhost:8080/api/progress/current-user",
-          {
-            credentials: "include",
-          }
-        );
-
-        if (!response.ok) {
-          if (response.status === 401) {
-            // User not authenticated, redirect to login
-            navigate.push("/LogIn");
-            return;
-          }
-          throw new Error("Failed to fetch user data");
-        }
-
-        const userData = await response.json();
-        if (userData && userData.user) {
-          setUser(userData.user);
-        } else {
-          navigate.push("/LogIn");
-        }
-      } catch (error) {
-        console.error("Error fetching user:", error);
-        navigate.push("/LogIn");
-      }
-    };
-
-    getCurrentUser();
-  }, [navigate]);
+  const [sessionId] = useState(`session_${Date.now()}`);
+  const [startTime] = useState(Date.now());
 
   // Progress tracking function
   const recordQuizProgress = async (finalScore) => {
@@ -73,21 +38,19 @@ export default function QuizPage() {
     try {
       const duration = Date.now() - startTime;
 
-      const response = await fetch(
-        "http://localhost:8080/api/progress/quiz-progress",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({
-            // Remove user_id - it's now extracted from JWT token
-            ai_chat_history_id: quizId,
-            score: finalScore,
-            duration_ms: duration,
-            session_id: sessionId,
-          }),
-        }
-      );
+      const API_BASE =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
+      const response = await fetch(`${API_BASE}/progress/quiz-progress`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          ai_chat_history_id: quizId,
+          score: finalScore,
+          duration_ms: duration,
+          session_id: sessionId,
+        }),
+      });
 
       if (!response.ok) {
         throw new Error(`Failed to record quiz progress: ${response.status}`);
@@ -99,6 +62,7 @@ export default function QuizPage() {
     }
   };
 
+  // Fetch quiz data when user is authenticated and quizId is available
   useEffect(() => {
     if (!quizId || !user) return;
 
@@ -107,14 +71,18 @@ export default function QuizPage() {
         setLoading(true);
         setError(null);
 
-        const res = await fetch(
-          `http://localhost:8080/api/chat/quiz/${quizId}`,
-          {
-            credentials: "include",
-          }
-        );
+        const API_BASE =
+          process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
+        const res = await fetch(`${API_BASE}/chat/quiz/${quizId}`, {
+          credentials: "include",
+        });
 
         if (!res.ok) {
+          if (res.status === 401) {
+            // User not authenticated, redirect to login
+            navigate.push("/LogIn");
+            return;
+          }
           throw new Error(`HTTP ${res.status}: ${res.statusText}`);
         }
 
@@ -152,7 +120,14 @@ export default function QuizPage() {
     }
 
     fetchData();
-  }, [quizId, user]);
+  }, [quizId, user, navigate]);
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate.push("/LogIn");
+    }
+  }, [user, authLoading, navigate]);
 
   // Determine if it's a quiz
   const isQuiz =
@@ -203,8 +178,8 @@ export default function QuizPage() {
     setShowAnswer(false);
   };
 
-  // Don't render anything until we have user data
-  if (!user) {
+  // Don't render anything while checking authentication
+  if (authLoading) {
     return (
       <div className="p-8 text-center">
         <Hourglass size="40" bgOpacity="0.1" speed="1.75" color="white" />
@@ -213,6 +188,11 @@ export default function QuizPage() {
         </div>
       </div>
     );
+  }
+
+  // Don't render anything if user is not authenticated
+  if (!user) {
+    return null; // Will redirect to login
   }
 
   // Loading state

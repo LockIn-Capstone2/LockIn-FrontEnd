@@ -119,8 +119,10 @@ export default function Signup() {
 
     try {
       // Use the correct endpoint based on backend structure
+      const API_BASE =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
       const res = await axios.post(
-        `http://localhost:8080/api/auth/signup`,
+        `${API_BASE}/auth/signup`,
         {
           firstName,
           lastName,
@@ -150,7 +152,7 @@ export default function Signup() {
         // Automatically log in the user after successful signup
         try {
           const loginRes = await axios.post(
-            `http://localhost:8080/api/auth/login`,
+            `${API_BASE}/auth/login`,
             {
               username,
               password,

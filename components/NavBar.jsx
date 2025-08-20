@@ -18,6 +18,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import ThemeToggle from "./ThemeToggle";
+import { useAuth } from "../contexts/AuthContext";
 
 // Navigation links for non-authenticated users
 const publicNavigationLinks = [
@@ -26,77 +27,35 @@ const publicNavigationLinks = [
 ];
 
 export default function NavBarComponent() {
-  const [user, setUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user, logout, loading } = useAuth(); // Use auth context instead of local state
   const router = useRouter();
 
   // Navigation links for authenticated users - moved inside component to access user state
-  // Navigation links for authenticated users
   const authenticatedNavigationLinks = [
     { href: "#", label: "Home" },
     { href: "/LockInChat", label: "Study with AI" },
     { href: "/StudySession", label: "Study Timer" },
     { href: "/Tasks", label: "Tasks" },
-    { href: `/DashBoard/${user?.id}`, label: "Dashboard" }, // Fixed: DashBoard with capital B
+    { href: `/DashBoard/${user?.id}`, label: "Dashboard" },
   ];
-  // Check if user is authenticated
-  const checkAuth = async () => {
-    try {
-      const response = await fetch(
-        "http://localhost:8080/api/progress/current-user",
-        {
-          credentials: "include",
-        }
-      );
 
-      if (response.ok) {
-        const userData = await response.json();
-        if (userData && userData.user) {
-          setUser(userData.user);
-        } else {
-          setUser(null);
-        }
-      } else {
-        setUser(null);
-      }
-    } catch (error) {
-      console.error("Error checking authentication:", error);
-      setUser(null);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Check auth on mount only
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
-  // Handle logout
+  // Handle logout using auth context
   const handleLogout = async () => {
     try {
-      const response = await fetch("http://localhost:8080/api/auth/logout", {
-        method: "POST",
-        credentials: "include",
-      });
+      await logout(); // Use the logout function from auth context
 
-      if (response.ok) {
-        // Clear user state immediately
-        setUser(null);
+      // Redirect to home page
+      router.push("/");
 
-        // Redirect to home page
-        router.push("/");
-
-        // Force a page refresh to clear any cached state
-        window.location.reload();
-      }
+      // Force a page refresh to clear any cached state
+      window.location.reload();
     } catch (error) {
       console.error("Error logging out:", error);
     }
   };
 
   // Don't render while checking authentication
-  if (isLoading) {
+  if (loading) {
     return (
       <header className="border-b px-4 md:px-6">
         <div className="flex h-16 items-center justify-between gap-4">
@@ -230,7 +189,7 @@ export default function NavBarComponent() {
                 >
                   <path
                     d="M4 12L20 12"
-                    className="origin-center -translate-y-[7px] transition-all duration-300 ease-[cubic-bezier(.5,.85,.25,1.1)] group-aria-expanded:translate-x-0 group-aria-expanded:translate-y-0 group-aria-expanded:rotate-[135deg]"
+                    className="origin-center -translate-y-[7px] transition-all duration-300 ease-[cubic-bezier(.5,.85,.25,1.1)] group-aria-expanded:translate-x-0 group-aria-expanded:translate-y-0 group-aria-expanded:rotate-[315deg]"
                   />
                   <path
                     d="M4 12H20"

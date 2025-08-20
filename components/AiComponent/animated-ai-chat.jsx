@@ -262,7 +262,9 @@ export default function AnimatedAIChat() {
         setIsTyping(true);
       });
 
-      const url = "http://localhost:8080/api/chat";
+      const API_BASE =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
+      const url = `${API_BASE}/chat`;
       const response = await fetch(url, {
         method: "POST",
         headers: {
