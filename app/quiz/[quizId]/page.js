@@ -277,10 +277,10 @@ export default function QuizPage() {
           Restart Quiz
         </button>
         <button
-          onClick={() => navigate.push("/LockInChat")}
+          onClick={() => navigate.push(`/DashBoard/${user.id}`)}
           className="py-4 px-8 text-[1.2rem] bg-[#666] text-white border-none rounded-2xl cursor-pointer"
         >
-          Go Back
+          Go to Dashboard
         </button>
       </div>
     );
