@@ -153,6 +153,17 @@ export default function Dashboard() {
 
   const [profileSheetOpen, setProfileSheetOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Profile form state
+  const [profileForm, setProfileForm] = useState({
+    username: "",
+    email: "",
+    studyGoal: 30,
+  });
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileError, setProfileError] = useState("");
+  const [profileSuccess, setProfileSuccess] = useState("");
+
   const { userId } = useParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -165,13 +176,23 @@ export default function Dashboard() {
           credentials: "include",
         });
 
+        // Check if response is JSON
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+          throw new Error(
+            "Server returned non-JSON response. Check if the backend server is running."
+          );
+        }
+
         if (!response.ok) {
           if (response.status === 401) {
             // User not authenticated, redirect to login
             router.push("/LogIn");
             return;
           }
-          throw new Error("Failed to fetch user data");
+          throw new Error(
+            `Failed to fetch user data: ${response.status} ${response.statusText}`
+          );
         }
 
         const userData = await response.json();
@@ -198,6 +219,17 @@ export default function Dashboard() {
     fetchUser();
   }, [router, userId]);
 
+  // Initialize profile form when user data is loaded
+  useEffect(() => {
+    if (user) {
+      setProfileForm({
+        username: user.username || "",
+        email: user.email || "",
+        studyGoal: user.studyGoal || 30,
+      });
+    }
+  }, [user]);
+
   // Derived values with safe access
   const currentStats = dashboardData || {};
   const badgeProgress = badgeData?.badgeProgress || [];
@@ -217,9 +249,6 @@ export default function Dashboard() {
   const accuracyRate = Number(currentStats.all_time?.flashAccuracy || 0);
 
   // nav items
-  // ... existing code ...
-
-  // nav items
   const navigationItems = [
     {
       icon: IconHome,
@@ -229,33 +258,27 @@ export default function Dashboard() {
     },
     {
       icon: IconBook,
-      label: "Study Sessions",
+      label: "Study Timer",
       href: "/StudySession",
       active: pathname === "/StudySession",
     },
     {
-      icon: IconTarget,
-      label: "Goals",
-      href: "/Tasks", // Removed userId since Tasks might not be dynamic
-      active: pathname === "/Tasks",
-    },
-    {
       icon: IconChartPie,
-      label: "Analytics",
-      href: "/ChartData", // Removed userId since ChartData might not be dynamic
-      active: pathname === "/ChartData",
+      label: "Grade Calculator",
+      href: "/GradeCalculator", // Removed userId since ChartData might not be dynamic
+      active: pathname === "/GradeCalculator",
     },
     {
       icon: IconUsers,
-      label: "Community",
-      href: "/community",
-      active: pathname === "/community",
+      label: "Tasks",
+      href: "/Tasks",
+      active: pathname === "/Tasks",
     },
     {
       icon: IconSettings,
-      label: "Settings",
-      href: "/settings",
-      active: pathname === "/settings",
+      label: "Study with AI",
+      href: "/LockInChat",
+      active: pathname === "/LockInChat",
     },
   ];
 
@@ -268,6 +291,8 @@ export default function Dashboard() {
       try {
         setLoading(true);
         setError(null);
+
+        console.log("Fetching dashboard data from:", API_BASE);
 
         const [dashRes, streakRes, chartRes, badgeRes] = await Promise.all([
           fetch(`${API_BASE}/progress/summary`, {
@@ -284,9 +309,26 @@ export default function Dashboard() {
           }),
         ]);
 
-        if (!dashRes.ok || !streakRes.ok || !chartRes.ok || !badgeRes.ok) {
-          throw new Error("One or more requests failed");
-        }
+        // Check if responses are JSON before parsing
+        const checkResponse = (response, endpoint) => {
+          const contentType = response.headers.get("content-type");
+          if (!contentType || !contentType.includes("application/json")) {
+            throw new Error(
+              `API endpoint ${endpoint} returned non-JSON response. Check if the server is running and the endpoint is correct.`
+            );
+          }
+          if (!response.ok) {
+            throw new Error(
+              `API endpoint ${endpoint} failed with status ${response.status}`
+            );
+          }
+        };
+
+        // Check each response
+        checkResponse(dashRes, "/progress/summary");
+        checkResponse(streakRes, "/sessions/streak");
+        checkResponse(chartRes, "/progress/daily-chart");
+        checkResponse(badgeRes, "/badges/progress");
 
         const [dashJson, streakJson, chartJson, badgeJson] = await Promise.all([
           dashRes.json(),
@@ -339,11 +381,76 @@ export default function Dashboard() {
         const br = await fetch(`${API_BASE}/badges/progress`, {
           credentials: "include",
         });
-        if (br.ok) setBadgeData(await br.json());
+        if (br.ok) {
+          const contentType = br.headers.get("content-type");
+          if (contentType && contentType.includes("application/json")) {
+            setBadgeData(await br.json());
+          }
+        }
       }
     } catch (e) {
       console.error("markBadgeAsViewed error", e);
     }
+  };
+
+  // Handle profile form submission - FIXED ENDPOINT
+  const handleProfileSubmit = async (e) => {
+    e.preventDefault();
+    setProfileLoading(true);
+    setProfileError("");
+    setProfileSuccess("");
+
+    try {
+      // Fix: Remove /api from the URL for auth endpoints
+      const authBase = API_BASE.replace("/api", "");
+      const response = await fetch(`${authBase}/auth/update-profile`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(profileForm),
+      });
+
+      // Check if response is JSON
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error(
+          "Server returned non-JSON response. Check if the backend server is running."
+        );
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update profile");
+      }
+
+      const result = await response.json();
+
+      // Update local user state
+      setUser((prevUser) => ({
+        ...prevUser,
+        ...result.user,
+      }));
+
+      setProfileSuccess("Profile updated successfully!");
+
+      // Clear success message after 3 seconds
+      setTimeout(() => setProfileSuccess(""), 3000);
+    } catch (error) {
+      console.error("Profile update error:", error);
+      setProfileError(error.message || "Failed to update profile");
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  // Handle profile form input changes
+  const handleProfileInputChange = (field, value) => {
+    setProfileForm((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
   };
 
   const handleLogout = async () => {
@@ -380,18 +487,42 @@ export default function Dashboard() {
   if (error) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center max-w-sm">
+        <div className="text-center max-w-md">
           <IconX className="h-12 w-12 text-red-500 mx-auto mb-4" />
           <h2 className="text-xl font-semibold mb-2">
             Error Loading Dashboard
           </h2>
           <p className="text-muted-foreground mb-4">{error}</p>
-          <button
-            onClick={() => location.reload()}
-            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg"
-          >
-            Try Again
-          </button>
+
+          {/* Debug information */}
+          <div className="bg-muted/50 p-4 rounded-lg mb-4 text-left">
+            <h3 className="text-sm font-medium mb-2">Debug Information:</h3>
+            <p className="text-xs text-muted-foreground mb-1">
+              API Base URL: {API_BASE}
+            </p>
+            <p className="text-xs text-muted-foreground mb-1">
+              Current User ID: {userId}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Make sure your backend server is running at{" "}
+              {API_BASE.replace("/api", "")}
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <button
+              onClick={() => location.reload()}
+              className="w-full px-4 py-2 bg-primary text-primary-foreground rounded-lg"
+            >
+              Try Again
+            </button>
+            <button
+              onClick={() => router.push("/LogIn")}
+              className="w-full px-4 py-2 border border-border text-foreground rounded-lg"
+            >
+              Go to Login
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -877,7 +1008,7 @@ export default function Dashboard() {
                       );
                       return (
                         <div key={i} className="space-y-2">
-                          <div className="flex justify-between items-center">
+                          <div className="flex items-center justify-between">
                             <span className="text-sm font-medium">
                               {badgeItem.badge.name}
                             </span>
@@ -944,16 +1075,20 @@ export default function Dashboard() {
               </div>
 
               {/* Editable Profile Fields */}
-              <div className="space-y-4 mb-6">
+              <form onSubmit={handleProfileSubmit} className="space-y-4 mb-6">
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">
                     Display Name
                   </label>
                   <input
                     type="text"
-                    defaultValue={user.username}
+                    value={profileForm.username}
+                    onChange={(e) =>
+                      handleProfileInputChange("username", e.target.value)
+                    }
                     className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
                     placeholder="Enter your display name"
+                    required
                   />
                 </div>
 
@@ -963,9 +1098,13 @@ export default function Dashboard() {
                   </label>
                   <input
                     type="email"
-                    defaultValue={user.email || "user@example.com"}
+                    value={profileForm.email}
+                    onChange={(e) =>
+                      handleProfileInputChange("email", e.target.value)
+                    }
                     className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
                     placeholder="Enter your email"
+                    required
                   />
                 </div>
 
@@ -975,12 +1114,52 @@ export default function Dashboard() {
                   </label>
                   <input
                     type="number"
-                    defaultValue="30"
+                    value={profileForm.studyGoal}
+                    onChange={(e) =>
+                      handleProfileInputChange(
+                        "studyGoal",
+                        parseInt(e.target.value) || 30
+                      )
+                    }
                     className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
                     placeholder="Enter daily study goal"
+                    min="1"
+                    max="480"
+                    required
                   />
                 </div>
-              </div>
+
+                {/* Error and Success Messages */}
+                {profileError && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-sm text-red-600">{profileError}</p>
+                  </div>
+                )}
+
+                {profileSuccess && (
+                  <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <p className="text-sm text-green-600">{profileSuccess}</p>
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="flex space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => setProfileSheetOpen(false)}
+                    className="flex-1 px-4 py-2 border border-border text-muted-foreground rounded-lg hover:bg-accent transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={profileLoading}
+                    className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {profileLoading ? "Saving..." : "Save Changes"}
+                  </button>
+                </div>
+              </form>
 
               {/* Stats Display */}
               <div className="space-y-4 mb-6">
@@ -1030,25 +1209,6 @@ export default function Dashboard() {
                     </div>
                   ))}
                 </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex space-x-3">
-                <button
-                  onClick={() => setProfileSheetOpen(false)}
-                  className="flex-1 px-4 py-2 border border-border text-muted-foreground rounded-lg hover:bg-accent transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => {
-                    // Here you would typically save the changes
-                    setProfileSheetOpen(false);
-                  }}
-                  className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
-                >
-                  Save Changes
-                </button>
               </div>
             </div>
           </div>
