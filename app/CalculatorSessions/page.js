@@ -41,7 +41,9 @@ function SavedSessions() {
   // axios function to delete a session via ID
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:8080/api/grade-calculator/grade-entry/${id}`);
+      await axios.delete(
+        `http://localhost:8080/api/grade-calculator/grade-entry/${id}`
+      );
       // remove session from the session list
       const updated = grades.filter((grade) => grade.id !== id);
       setGrades(updated);
@@ -56,9 +58,9 @@ function SavedSessions() {
     router.push(`/GradeCalculator?editId=$[id]`);
   };
 
-  // Filter sessions based on user search text input (note: case-insensitive)
-  const filteredSessions = sessions.filter((session) =>
-    session.title.toLowerCase().includes(search.toLowerCase())
+  // Filter assignments based on user search text input (note: case-insensitive)
+  const filteredGrades = grades.filter((grade) =>
+    grade.assignment_name.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -72,7 +74,7 @@ function SavedSessions() {
           className="ml-auto"
           onClick={() => router.push("/GradeCalculator")}
         >
-          New Session
+          New Assignment
         </Button>
       </div>
 
@@ -85,40 +87,55 @@ function SavedSessions() {
         className="mb-4 w-full max-w-lg"
       />
 
-      {/* List of filtered sessions */}
       {/* List of assignments */}
-<div className="w-full max-w-4xl space-y-4">
-  {grades.map((grade) => (
-    <Card key={grade.id} className="p-4 shadow-md rounded-2xl hover:shadow-lg transition">
-      <CardHeader>
-        <CardTitle className="text-lg font-semibold text-gray-800">
-          {grade.assignment_name}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="text-sm text-gray-600 space-y-1">
-        <p><span className="font-medium">Grade:</span> {grade.assignment_grade ?? "N/A"}</p>
-        <p><span className="font-medium">Weight:</span> {grade.assignment_weight ?? "N/A"}%</p>
-      </CardContent>
-      <CardFooter className="flex justify-end gap-3">
-        <Button variant="outline" size="sm" onClick={() => handleEdit(grade.id)}>
-          Edit
-        </Button>
-        <Button
-          variant="destructive"
-          size="sm"
-          onClick={() => handleDelete(grade.id)}
-        >
-          Delete
-        </Button>
-      </CardFooter>
-    </Card>
-  ))}
+      <div className="w-full max-w-4xl space-y-4">
+        {filteredGrades.map((grade) => (
+          <Card
+            key={grade.id}
+            className="p-4 shadow-md rounded-2xl hover:shadow-lg transition"
+          >
+            <CardHeader>
+              <CardTitle className="text-lg font-semibold text-gray-800 text-center">
+                {grade.assignment_name}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm text-gray-600 space-y-1 text-center">
+              <p>
+                <span className="font-medium">Assignment Type:</span>{" "}
+                {grade.assignment_type ?? "N/A"}
+              </p>
+              <p>
+                <span className="font-medium">Grade:</span>{" "}
+                {grade.assignment_grade ?? "N/A"}
+              </p>
+              <p>
+                <span className="font-medium">Weight:</span>{" "}
+                {grade.assignment_weight ?? "N/A"}%
+              </p>
+            </CardContent>
+            <CardFooter className="flex justify-end gap-3">
+              {/* <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleEdit(grade.id)}
+              >
+                Edit
+              </Button> */}
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => handleDelete(grade.id)}
+              >
+                Delete
+              </Button>
+            </CardFooter>
+          </Card>
+        ))}
 
-  {grades.length === 0 && (
-    <p className="text-center text-gray-500">No grades found.</p>
-  )}
-</div>
-
+        {grades.length === 0 && (
+          <p className="text-center text-gray-500">No grades found.</p>
+        )}
+      </div>
     </div>
   );
 }

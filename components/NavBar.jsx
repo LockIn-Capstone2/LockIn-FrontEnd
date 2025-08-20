@@ -18,6 +18,7 @@ const navigationLinks = [
   { href: "/LockInChat", label: "Study with AI", active: false },
   { href: "/StudySession", label: "Study Timer", active: false },
   { href: "/Tasks", label: "Tasks", active: false },
+  { href: "/GradeCalculator", label: "Grade Calculator", active: false },
 ];
 
 export default function NavBarComponent() {
