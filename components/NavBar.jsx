@@ -44,13 +44,12 @@ export default function NavBarComponent() {
     try {
       await logout(); // Use the logout function from auth context
 
-      // Redirect to home page
+      // Redirect to login page
       router.push("/");
-
-      // Force a page refresh to clear any cached state
-      window.location.reload();
     } catch (error) {
-      console.error("Error logging out:", error);
+      console.error("Error during logout:", error);
+      // Still redirect even if logout fails
+      router.push("/LogIn");
     }
   };
 
