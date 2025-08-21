@@ -30,6 +30,7 @@ import { ProgressAreaChart } from "@/components/UserAreaChart/AreaChart";
 import { WeeklyActivityBarChart } from "@/components/UserBarChart/BarChart";
 import { StreakProgressRadialChart } from "@/components/UserRadialChart/RadialChart";
 import ThemeToggleButton from "@/components/ui/theme-toggle-button";
+import { useAuth } from "@/contexts/AuthContext";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
 
@@ -139,7 +140,7 @@ const EmptyChart = ({
 );
 
 export default function Dashboard() {
-  const [user, setUser] = useState(null);
+  const { user, loading: authLoading, logout, updateUser } = useAuth(); // Add updateUser back
   const [activeTab, setActiveTab] = useState("overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -168,56 +169,46 @@ export default function Dashboard() {
   const router = useRouter();
   const pathname = usePathname();
 
-  // Get current user on component mount
+  // Debug logging - after userId is defined
+  console.log(
+    "Dashboard render - user:",
+    user,
+    "authLoading:",
+    authLoading,
+    "userId:",
+    userId
+  );
+
+  // Redirect to login if not authenticated
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const response = await fetch(`${API_BASE}/progress/current-user`, {
-          credentials: "include",
-        });
+    if (!authLoading && !user) {
+      router.push("/LogIn");
+    }
+  }, [user, authLoading, router]);
 
-        // Check if response is JSON
-        const contentType = response.headers.get("content-type");
-        if (!contentType || !contentType.includes("application/json")) {
-          throw new Error(
-            "Server returned non-JSON response. Check if the backend server is running."
-          );
-        }
+  // Check if URL userId matches authenticated user
+  useEffect(() => {
+    console.log("User ID check - user:", user, "userId:", userId);
+    if (user && userId && user.id.toString() !== userId) {
+      console.log("User ID mismatch, redirecting to correct dashboard");
+      // URL userId doesn't match authenticated user, redirect to their dashboard
+      router.push(`/DashBoard/${user.id}`);
+    }
+  }, [user, userId, router]);
 
-        if (!response.ok) {
-          if (response.status === 401) {
-            // User not authenticated, redirect to login
-            router.push("/LogIn");
-            return;
-          }
-          throw new Error(
-            `Failed to fetch user data: ${response.status} ${response.statusText}`
-          );
-        }
-
-        const userData = await response.json();
-        if (userData && userData.user) {
-          setUser(userData.user);
-
-          if (userData.user.id.toString() !== userId) {
-            // URL userId doesn't match authenticated user, redirect to their dashboard
-            router.push(`/DashBoard/${userData.user.id}`); // Fixed: DashBoard with capital B
-            return;
-          }
-        } else {
-          // No user data, redirect to login
-          router.push("/LogIn");
-          return;
-        }
-      } catch (error) {
-        console.error("Error fetching user:", error);
-        router.push("/LogIn");
-        return;
-      }
-    };
-
-    fetchUser();
-  }, [router, userId]);
+  // Redirect to login if no user after auth loading is complete
+  useEffect(() => {
+    console.log(
+      "Redirect useEffect - authLoading:",
+      authLoading,
+      "user:",
+      user
+    );
+    if (!authLoading && !user) {
+      console.log("Redirecting to login - no user found");
+      router.push("/LogIn");
+    }
+  }, [authLoading, user, router]);
 
   // Initialize profile form when user data is loaded
   useEffect(() => {
@@ -236,9 +227,6 @@ export default function Dashboard() {
   const totalEarned = Number(badgeData?.totalEarned || 0);
   const totalBadges = Number(badgeData?.totalBadges || 0);
 
-  // replace these two lines:
-  // const earnedBadges = badgeData?.earnedBadges || [];
-  // const unearnedBadges = badgeData?.unearnedBadges || [];
   const earnedBadges = badgeProgress.filter((b) => b.earned);
   const unearnedBadges = badgeProgress.filter((b) => !b.earned);
 
@@ -253,8 +241,8 @@ export default function Dashboard() {
     {
       icon: IconHome,
       label: "Dashboard",
-      href: `/DashBoard/${user?.id}`, // Fixed: DashBoard with capital B
-      active: pathname === `/DashBoard/${user?.id}`, // Fixed: DashBoard with capital B
+      href: `/DashBoard/${user?.id}`,
+      active: pathname === `/DashBoard/${user?.id}`,
     },
     {
       icon: IconBook,
@@ -265,7 +253,7 @@ export default function Dashboard() {
     {
       icon: IconChartPie,
       label: "Grade Calculator",
-      href: "/GradeCalculator", // Removed userId since ChartData might not be dynamic
+      href: "/GradeCalculator",
       active: pathname === "/GradeCalculator",
     },
     {
@@ -283,8 +271,10 @@ export default function Dashboard() {
   ];
 
   // -------------- Fetch --------------
+  // In your useEffect for fetching data, add better error handling:
+  // In your useEffect for fetching data, add better error handling:
   useEffect(() => {
-    if (!user) return; // Don't fetch data until user is loaded
+    if (!user || !user.id) return; // Don't fetch data until user is loaded and has an ID
 
     let alive = true;
     const fetchAll = async () => {
@@ -292,43 +282,60 @@ export default function Dashboard() {
         setLoading(true);
         setError(null);
 
-        console.log("Fetching dashboard data from:", API_BASE);
+        console.log("Fetching dashboard data for user:", user.id);
+        console.log("API Base:", API_BASE);
+
+        // First, verify authentication is still valid
+        const authCheck = await fetch(`${API_BASE}/auth/me`, {
+          credentials: "include",
+        });
+
+        if (!authCheck.ok) {
+          console.error("Authentication check failed:", authCheck.status);
+          router.push("/LogIn");
+          return;
+        }
 
         const [dashRes, streakRes, chartRes, badgeRes] = await Promise.all([
           fetch(`${API_BASE}/progress/summary`, {
             credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+            },
           }),
           fetch(`${API_BASE}/sessions/streak`, {
             credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+            },
           }),
           fetch(`${API_BASE}/progress/daily-chart`, {
             credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+            },
           }),
           fetch(`${API_BASE}/badges/progress`, {
             credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+            },
           }),
         ]);
 
-        // Check if responses are JSON before parsing
-        const checkResponse = (response, endpoint) => {
-          const contentType = response.headers.get("content-type");
-          if (!contentType || !contentType.includes("application/json")) {
-            throw new Error(
-              `API endpoint ${endpoint} returned non-JSON response. Check if the server is running and the endpoint is correct.`
-            );
-          }
-          if (!response.ok) {
-            throw new Error(
-              `API endpoint ${endpoint} failed with status ${response.status}`
-            );
-          }
-        };
-
         // Check each response
-        checkResponse(dashRes, "/progress/summary");
-        checkResponse(streakRes, "/sessions/streak");
-        checkResponse(chartRes, "/progress/daily-chart");
-        checkResponse(badgeRes, "/badges/progress");
+        if (!dashRes.ok) {
+          throw new Error(`Dashboard data failed: ${dashRes.status}`);
+        }
+        if (!streakRes.ok) {
+          throw new Error(`Streak data failed: ${streakRes.status}`);
+        }
+        if (!chartRes.ok) {
+          throw new Error(`Chart data failed: ${chartRes.status}`);
+        }
+        if (!badgeRes.ok) {
+          throw new Error(`Badge data failed: ${badgeRes.status}`);
+        }
 
         const [dashJson, streakJson, chartJson, badgeJson] = await Promise.all([
           dashRes.json(),
@@ -341,22 +348,8 @@ export default function Dashboard() {
 
         setDashboardData(dashJson);
         setBadgeData(badgeJson);
-
-        // normalize streak + chart
         setStreakData(normalizeStreak(streakJson));
-        const normalizedChart = normalizeChartData(chartJson);
-
-        setChartData(
-          isNonEmptyArray(normalizedChart)
-            ? normalizedChart
-            : [
-                { label: "Mon", accuracy: 62, minutes: 25 },
-                { label: "Tue", accuracy: 74, minutes: 42 },
-                { label: "Wed", accuracy: 53, minutes: 18 },
-                { label: "Thu", accuracy: 81, minutes: 37 },
-                { label: "Fri", accuracy: 67, minutes: 29 },
-              ]
-        );
+        setChartData(normalizeChartData(chartJson));
       } catch (e) {
         console.error("Dashboard fetch error:", e);
         setError(e.message || "Failed to load dashboard data.");
@@ -369,7 +362,7 @@ export default function Dashboard() {
     return () => {
       alive = false;
     };
-  }, [user]);
+  }, [user, router]);
 
   const markBadgeAsViewed = async (badgeId) => {
     try {
@@ -393,7 +386,8 @@ export default function Dashboard() {
     }
   };
 
-  // Handle profile form submission - FIXED ENDPOINT
+  // Handle profile form submission using auth context
+  // Replace your handleProfileSubmit function with this:
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
     setProfileLoading(true);
@@ -401,42 +395,16 @@ export default function Dashboard() {
     setProfileSuccess("");
 
     try {
-      // Fix: Remove /api from the URL for auth endpoints
-      const authBase = API_BASE.replace("/api", "");
-      const response = await fetch(`${authBase}/auth/update-profile`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify(profileForm),
-      });
+      // Use the auth context's updateUser function
+      const result = await updateUser(profileForm);
 
-      // Check if response is JSON
-      const contentType = response.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        throw new Error(
-          "Server returned non-JSON response. Check if the backend server is running."
-        );
+      if (result.success) {
+        setProfileSuccess("Profile updated successfully!");
+        // Clear success message after 3 seconds
+        setTimeout(() => setProfileSuccess(""), 3000);
+      } else {
+        setProfileError(result.error || "Failed to update profile");
       }
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to update profile");
-      }
-
-      const result = await response.json();
-
-      // Update local user state
-      setUser((prevUser) => ({
-        ...prevUser,
-        ...result.user,
-      }));
-
-      setProfileSuccess("Profile updated successfully!");
-
-      // Clear success message after 3 seconds
-      setTimeout(() => setProfileSuccess(""), 3000);
     } catch (error) {
       console.error("Profile update error:", error);
       setProfileError(error.message || "Failed to update profile");
@@ -455,23 +423,40 @@ export default function Dashboard() {
 
   const handleLogout = async () => {
     try {
-      await fetch(`${API_BASE}/signup/logout`, {
-        method: "POST",
-        credentials: "include",
-      });
+      await logout(); // Use the logout function from auth context
 
-      // Clear any local storage or state
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("user");
-        // Redirect to login page
-        window.location.href = "/LogIn";
-      }
+      // Redirect to login page
+      router.push("/LogIn");
     } catch (error) {
       console.error("Error during logout:", error);
       // Still redirect even if logout fails
-      window.location.href = "/LogIn";
+      router.push("/LogIn");
     }
   };
+
+  // Don't render anything while checking authentication
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading your dashboard…</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render anything if user is not authenticated
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Redirecting to login...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -523,17 +508,6 @@ export default function Dashboard() {
               Go to Login
             </button>
           </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading user data…</p>
         </div>
       </div>
     );
@@ -886,16 +860,20 @@ export default function Dashboard() {
                             badgeItem.is_new ? "ring-2 ring-yellow-400" : ""
                           }`}
                           onClick={() => {
-                            if (badgeItem.earned && badgeItem.is_new) {
+                            if (
+                              badgeItem.earned &&
+                              badgeItem.is_new &&
+                              badgeItem.badge?.id
+                            ) {
                               markBadgeAsViewed(badgeItem.badge.id);
                             }
                           }}
                         >
                           <div className="text-2xl mb-1">
-                            {badgeItem.badge.icon}
+                            {badgeItem.badge?.icon || "🏆"}
                           </div>
                           <div className="text-xs font-medium text-foreground">
-                            {badgeItem.badge.name}
+                            {badgeItem.badge?.name || "Badge"}
                           </div>
                           {badgeItem.earned && (
                             <IconCheck className="w-4 h-4 text-green-600 mx-auto mt-1" />
@@ -967,13 +945,14 @@ export default function Dashboard() {
                         className="p-4 rounded-lg border border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/50"
                       >
                         <div className="text-3xl mb-2">
-                          {badgeItem.badge.icon}
+                          {badgeItem.badge?.icon || "🏆"}
                         </div>
                         <div className="font-medium text-sm">
-                          {badgeItem.badge.name}
+                          {badgeItem.badge?.name || "Badge"}
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          {badgeItem.badge.description}
+                          {badgeItem.badge?.description ||
+                            "Achievement unlocked!"}
                         </div>
                         <div className="text-xs text-green-600 mt-1">
                           ✓ Earned
@@ -1001,7 +980,7 @@ export default function Dashboard() {
                           ((badgeItem.current_value ?? 0) /
                             Math.max(
                               1,
-                              badgeItem.badge.requirement_value ?? 1
+                              badgeItem.badge?.requirement_value ?? 1
                             )) *
                             100
                         )
@@ -1010,11 +989,11 @@ export default function Dashboard() {
                         <div key={i} className="space-y-2">
                           <div className="flex items-center justify-between">
                             <span className="text-sm font-medium">
-                              {badgeItem.badge.name}
+                              {badgeItem.badge?.name || "Badge"}
                             </span>
                             <span className="text-xs text-muted-foreground">
-                              {badgeItem.current_value}/
-                              {badgeItem.badge.requirement_value}
+                              {badgeItem.current_value || 0}/
+                              {badgeItem.badge?.requirement_value || 1}
                             </span>
                           </div>
                           <div className="w-full bg-muted rounded-full h-2">

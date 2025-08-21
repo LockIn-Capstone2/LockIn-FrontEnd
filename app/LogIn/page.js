@@ -10,11 +10,12 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import axios from "axios";
+
 import React, { useState } from "react";
 import Link from "next/link";
 import { Alert, Snackbar } from "@mui/material";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 
 function LogIn() {
   const [username, setUsername] = useState("");
@@ -24,6 +25,7 @@ function LogIn() {
   const [alertSeverity, setAlertSeverity] = useState("success");
 
   const navigate = useRouter();
+  const { login } = useAuth();
 
   const handleUsernameChange = (event) => {
     setUsername(event.target.value);
@@ -44,62 +46,41 @@ function LogIn() {
     }
 
     try {
-      const response = await axios.post(
-        `http://localhost:8080/api/auth/login`,
-        {
-          username,
-          password,
-        },
-        {
-          withCredentials: true,
-        }
-      );
+      setAlertMessage("Logging in...");
+      setAlertSeverity("info");
+      setAlertOpen(true);
 
-      console.log(response.data);
+      const result = await login(username, password);
 
-      if (response.data.message === "Login successful") {
-        setAlertMessage("Log In successfully! Redirecting...");
+      if (result.success) {
+        setAlertMessage("Log In successful! Redirecting to dashboard...");
         setAlertSeverity("success");
         setAlertOpen(true);
 
-        // Get the user data from the response to extract the user ID
-        if (response.data.user && response.data.user.id) {
-          // Redirect to the user's specific dashboard
-          setTimeout(() => {
-            navigate.push(`/DashBoard/${response.data.user.id}`);
-          }, 1500);
-        } else {
-          // Fallback to home if no user data
-          setTimeout(() => {
-            navigate.push("/");
-          }, 1500);
-        }
+        console.log("Login successful, user:", result.user);
+        console.log(
+          "Redirecting to dashboard:",
+          `/DashBoard/${result.user.id}`
+        );
+
+        // Redirect to the user's dashboard
+        setTimeout(() => {
+          console.log("Executing redirect now...");
+          try {
+            navigate.push(`/DashBoard/${result.user.id}`);
+          } catch (navError) {
+            console.error("Navigation error, using fallback:", navError);
+            window.location.href = `/DashBoard/${result.user.id}`;
+          }
+        }, 1500);
       } else {
-        throw new Error("Login failed - unexpected response");
+        setAlertMessage(result.error || "Login failed");
+        setAlertSeverity("error");
+        setAlertOpen(true);
       }
     } catch (error) {
-      console.log("error", error.response);
-
-      let errorMessage = "Log In failed";
-
-      if (error.response) {
-        if (error.response.status === 401) {
-          errorMessage = "Invalid username or password";
-        } else if (error.response.status === 400) {
-          errorMessage = error.response.data.error || "Invalid input";
-        } else if (error.response.status === 500) {
-          errorMessage = "Server error. Please try again later.";
-        } else {
-          errorMessage = error.response.data.error || "Log In failed";
-        }
-      } else if (error.request) {
-        errorMessage =
-          "Unable to connect to server. Please check your connection.";
-      } else {
-        errorMessage = error.message || "An unexpected error occurred";
-      }
-
-      setAlertMessage(errorMessage);
+      console.error("Login error:", error);
+      setAlertMessage("Login failed. Please try again.");
       setAlertSeverity("error");
       setAlertOpen(true);
     }

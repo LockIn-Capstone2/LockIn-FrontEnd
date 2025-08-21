@@ -93,10 +93,9 @@ export default function TasksPage({ params }) {
 
   const handleEditTask = async () => {
     try {
-      await axios.put(
-        `http://localhost:8080/api/tasks/${userId}/${editTask.id}`,
-        editTask
-      );
+      const API_BASE =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
+      await axios.put(`${API_BASE}/tasks/${userId}/${editTask.id}`, editTask);
       setEditTask(null);
       fetchTasks();
     } catch (error) {

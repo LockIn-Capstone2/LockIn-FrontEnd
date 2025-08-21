@@ -38,7 +38,7 @@ function GradeCalculator() {
   // state to hold calculated final grade
   const [finalGrade, setFinalGrade] = useState(null);
 
-  // Check if user is authenticated
+  // Check if user is authenticated (optional - for saving calculations)
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -50,18 +50,10 @@ function GradeCalculator() {
           const userData = await response.json();
           if (userData && userData.user) {
             setUser(userData.user);
-          } else {
-            setUser(null);
-            router.push("/LogIn");
           }
-        } else {
-          setUser(null);
-          router.push("/LogIn");
         }
       } catch (error) {
-        console.error("Error checking authentication:", error);
-        setUser(null);
-        router.push("/LogIn");
+        console.log("User not authenticated - calculator still works");
       } finally {
         setIsLoading(false);
       }
@@ -73,11 +65,6 @@ function GradeCalculator() {
   // Don't render while checking authentication
   if (isLoading) {
     return <div>Loading...</div>;
-  }
-
-  // Don't render if no user
-  if (!user) {
-    return null;
   }
 
   // handle general changes to assignment fields
@@ -171,27 +158,29 @@ function GradeCalculator() {
                 Enter grades and weights to calculate your grade.
               </CardDescription>
             </div>
-            <Button
-              variant="outline"
-              onClick={() => router.push(`/DashBoard/${user.id}`)}
-              className="flex items-center gap-2"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+            {user && (
+              <Button
+                variant="outline"
+                onClick={() => router.push(`/DashBoard/${user.id}`)}
+                className="flex items-center gap-2"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                />
-              </svg>
-              Back to Dashboard
-            </Button>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                  />
+                </svg>
+                Back to Dashboard
+              </Button>
+            )}
           </div>
         </CardHeader>
 

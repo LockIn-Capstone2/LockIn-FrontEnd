@@ -13,9 +13,10 @@ import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import React from "react";
 import { Alert } from "@mui/material";
+import { useAuth } from "@/contexts/AuthContext";
 
 function StudyTimer() {
-  const userId = 3;
+  const { user } = useAuth();
   const [hours, setHours] = useState("");
   const [minutes, setMinutes] = useState("");
   const [seconds, setSeconds] = useState("");
@@ -89,12 +90,23 @@ function StudyTimer() {
   };
 
   const sendTimeData = async (totalDuration) => {
+    if (!user) {
+      console.error("User not authenticated");
+      return;
+    }
+
     const duration = formatTimeForDatabase(totalDuration);
     try {
+      const API_BASE =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
       const response = await axios.post(
-        `http://localhost:8080/api/data/${userId}`,
+        `${API_BASE}/data`,
         {
           duration: duration,
+          // No need to send userId - it comes from the JWT token
+        },
+        {
+          withCredentials: true, // This sends the JWT cookie
         }
       );
     } catch (error) {
