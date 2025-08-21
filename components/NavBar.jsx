@@ -35,7 +35,7 @@ export default function NavBarComponent() {
     { href: "#", label: "Home" },
     { href: "/LockInChat", label: "Study with AI" },
     { href: "/StudySession", label: "Study Timer" },
-    { href: "/Tasks", label: "Tasks" },
+    { href: `/Tasks/${user?.id}`, label: "Tasks" },
     { href: `/DashBoard/${user?.id}`, label: "Dashboard" },
   ];
 

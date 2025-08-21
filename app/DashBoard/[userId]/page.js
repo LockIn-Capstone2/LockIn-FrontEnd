@@ -259,8 +259,8 @@ export default function Dashboard() {
     {
       icon: IconUsers,
       label: "Tasks",
-      href: "/Tasks",
-      active: pathname === "/Tasks",
+      href: `/Tasks/${user?.id}`,
+      active: pathname === `/Tasks/${user?.id}`,
     },
     {
       icon: IconSettings,
@@ -274,7 +274,7 @@ export default function Dashboard() {
   // In your useEffect for fetching data, add better error handling:
   // In your useEffect for fetching data, add better error handling:
   useEffect(() => {
-    if (!user || !user.id) return; // Don't fetch data until user is loaded and has an ID
+    if (!user || !user.id || authLoading) return; // Don't fetch data until user is loaded and has an ID
 
     let alive = true;
     const fetchAll = async () => {
@@ -362,7 +362,7 @@ export default function Dashboard() {
     return () => {
       alive = false;
     };
-  }, [user, router]);
+  }, [user, authLoading, router]);
 
   const markBadgeAsViewed = async (badgeId) => {
     try {
