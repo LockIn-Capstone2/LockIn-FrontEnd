@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
+import axios from "axios";
 import { Calendar } from "@/components/ui/calender";
 import {
   Popover,
@@ -16,13 +17,16 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import axios from "axios";
+import { useAuth } from "@/contexts/AuthContext";
 import "../tasks.css";
 
 export default function TasksPage({ params }) {
   // Unwrap params using React.use() for Next.js compatibility
   const { userId } = use(params);
   const router = useRouter();
+
+  // FIXED: Use AuthContext instead of local auth state
+  const { user, loading: authLoading } = useAuth();
 
   const [tasks, setTasks] = useState([]);
   const [showNewRow, setShowNewRow] = useState(false);
@@ -46,8 +50,6 @@ export default function TasksPage({ params }) {
   const [editCalendarOpen, setEditCalendarOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState(null);
 
   // API configuration
   const API_BASE =
@@ -62,39 +64,6 @@ export default function TasksPage({ params }) {
     },
   });
 
-  // Check authentication status - FIXED VERSION
-  const checkAuth = async () => {
-    try {
-      console.log("🔐 Checking authentication...");
-      const res = await api.get(`${API_BASE}/auth/me`);
-      console.log("Auth response:", res.data);
-
-      // Check if we got user data back
-      if (res.data && res.data.id) {
-        console.log("✅ User authenticated:", res.data);
-        setIsAuthenticated(true);
-        setUser(res.data); // Set user data for dashboard navigation
-        return true;
-      } else {
-        console.log("❌ No user data returned");
-        setIsAuthenticated(false);
-        setUser(null);
-        setError("Please log in to access your tasks.");
-        return false;
-      }
-    } catch (error) {
-      console.error("❌ Authentication check failed:", error);
-      setIsAuthenticated(false);
-      setUser(null);
-      if (error.response?.status === 401) {
-        setError("Please log in to access your tasks.");
-      } else {
-        setError("Authentication failed. Please try logging in again.");
-      }
-      return false;
-    }
-  };
-
   const fetchTasks = async () => {
     try {
       setLoading(true);
@@ -105,18 +74,11 @@ export default function TasksPage({ params }) {
 
       console.log("Tasks fetched successfully:", res.data);
       setTasks(res.data);
-      setIsAuthenticated(true);
-
-      // Also set user data here if available from the response
-      if (res.data && res.data.length > 0 && res.data[0].userId) {
-        setUser({ id: res.data[0].userId });
-      }
     } catch (error) {
       console.error("Error fetching tasks:", error);
 
       if (error.response?.status === 401) {
         setError("Please log in to view your tasks.");
-        setIsAuthenticated(false);
       } else {
         setError("Failed to fetch tasks. Please try again.");
       }
@@ -126,15 +88,11 @@ export default function TasksPage({ params }) {
   };
 
   useEffect(() => {
-    if (userId) {
-      // First check auth, then fetch tasks
-      checkAuth().then((authenticated) => {
-        if (authenticated) {
-          fetchTasks();
-        }
-      });
+    // 🔥 FIXED: Only fetch tasks when user is authenticated and userId is available
+    if (userId && user && !authLoading) {
+      fetchTasks();
     }
-  }, [userId]);
+  }, [userId, user, authLoading]);
 
   const handleDelete = async (taskId) => {
     try {
@@ -176,7 +134,7 @@ export default function TasksPage({ params }) {
       };
 
       console.log("📝 Original newTask:", newTask);
-      console.log("📤 Processed taskData:", taskData);
+      console.log("�� Processed taskData:", taskData);
 
       const res = await api.post("/tasks", taskData);
 
@@ -205,7 +163,6 @@ export default function TasksPage({ params }) {
 
       if (error.response?.status === 401) {
         setError("Please log in to create tasks.");
-        setIsAuthenticated(false);
       } else if (error.response?.status === 400) {
         setError(
           error.response.data.error ||
@@ -260,7 +217,6 @@ export default function TasksPage({ params }) {
 
       if (error.response?.status === 401) {
         setError("Please log in to edit tasks.");
-        setIsAuthenticated(false);
       } else if (error.response?.status === 400) {
         setError(
           error.response.data.error ||
@@ -290,7 +246,6 @@ export default function TasksPage({ params }) {
 
       if (error.response?.status === 401) {
         setError("Please log in to update task status.");
-        setIsAuthenticated(false);
       } else {
         setError("Failed to update status. Please try again.");
       }
@@ -312,8 +267,22 @@ export default function TasksPage({ params }) {
     setFilterPriority("");
   };
 
-  // Show authentication required message
-  if (!isAuthenticated && !loading) {
+  // 🔥 FIXED: Show loading while auth is checking
+  if (authLoading) {
+    return (
+      <div className="task-container">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p>Checking authentication...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 🔥 FIXED: Show authentication required message only when auth is done and no user
+  if (!authLoading && !user) {
     return (
       <div className="task-container">
         <div className="flex items-center justify-center h-64">
@@ -330,13 +299,10 @@ export default function TasksPage({ params }) {
               </div>
             )}
             <button
-              onClick={() => {
-                setError("");
-                checkAuth();
-              }}
+              onClick={() => router.push("/LogIn")}
               className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
             >
-              Retry Authentication
+              Go to Login
             </button>
           </div>
         </div>
