@@ -11,7 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 export default function FlashcardPage() {
   const { flashcardId } = useParams();
-  const { user, loading: authLoading } = useAuth(); // Use auth context instead of local state
+  const { user, loading: authLoading } = useAuth();
   const navigate = useRouter();
 
   const [loading, setLoading] = useState(true);
@@ -89,7 +89,7 @@ export default function FlashcardPage() {
       return result;
     } catch (err) {
       console.error("Failed to start session:", err);
-      throw err; // Re-throw to be handled by caller
+      throw err;
     }
   };
 
@@ -115,9 +115,81 @@ export default function FlashcardPage() {
     }
   };
 
+  // Handle flashcard answer (correct/incorrect) with auto-advance
+  const handleFlashcardAnswer = async (isCorrect) => {
+    // Record progress for the current card
+    await recordProgress(currentIndex, isCorrect);
+
+    // Mark this card as completed
+    setCompletedCards((prev) => new Set([...prev, currentIndex]));
+
+    // Auto-advance to next card after a short delay
+    setTimeout(() => {
+      const next = currentIndex + 1;
+      if (next < data.length) {
+        setCurrentIndex(next);
+        setShowAnswer(false);
+      } else {
+        // All cards completed, redirect to dashboard
+        navigate.push(`/DashBoard/${user.id}`);
+      }
+    }, 1000); // 1 second delay to show the answer feedback
+
+    console.log(
+      `Card ${currentIndex + 1}: ${isCorrect ? "Correct" : "Incorrect"}`
+    );
+  };
+
+  const handleFlashcardNext = () => {
+    if (!data) return;
+
+    const next = currentIndex + 1;
+    if (next < data.length) {
+      setCurrentIndex(next);
+      setShowAnswer(false);
+    } else {
+      // Loop back to first card
+      setCurrentIndex(0);
+      setShowAnswer(false);
+    }
+  };
+
+  const handleFlashcardPrevious = () => {
+    if (!data) return;
+
+    const prev = currentIndex - 1;
+    if (prev >= 0) {
+      setCurrentIndex(prev);
+      setShowAnswer(false);
+    } else {
+      // Loop to last card
+      setCurrentIndex(data.length - 1);
+      setShowAnswer(false);
+    }
+  };
+
   // Fetch flashcard data when user is authenticated and flashcardId is available
   useEffect(() => {
-    if (!flashcardId || !user) return;
+    console.log("🔐 useEffect triggered:", { flashcardId, user, authLoading });
+
+    // Only proceed if we have both flashcardId and user is authenticated
+    if (!flashcardId || authLoading) {
+      console.log("⏳ Waiting for flashcardId or auth to load");
+      return;
+    }
+
+    // If auth is done loading and no user, redirect to login
+    if (!authLoading && !user) {
+      console.log("❌ No user found, redirecting to login");
+      navigate.push("/LogIn");
+      return;
+    }
+
+    // If we have user and flashcardId, proceed with initialization
+    if (user && flashcardId) {
+      console.log("✅ User and flashcardId available, initializing session");
+      initializeSession();
+    }
 
     async function initializeSession() {
       try {
@@ -176,83 +248,25 @@ export default function FlashcardPage() {
       }
     }
 
-    initializeSession();
-
     return () => {
-      endSession();
+      if (user) {
+        endSession();
+      }
     };
-  }, [flashcardId, user, navigate]);
+  }, [flashcardId, user, authLoading, navigate]);
 
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!authLoading && !user) {
-      navigate.push("/LogIn");
-    }
-  }, [user, authLoading, navigate]);
+  // Check if all cards are completed
+  const allCardsCompleted = data && completedCards.size === data.length;
 
+  // Determine if it's a flashcard
   const isFlashcard =
     data &&
     (data[0].front || data[0].question) &&
     (data[0].back || data[0].answer || data[0].correct);
 
-  const handleFlashcardNext = () => {
-    if (!data) return;
-
-    const next = currentIndex + 1;
-    if (next < data.length) {
-      setCurrentIndex(next);
-      setShowAnswer(false);
-    } else {
-      // Loop back to first card
-      setCurrentIndex(0);
-      setShowAnswer(false);
-    }
-  };
-
-  const handleFlashcardPrevious = () => {
-    if (!data) return;
-
-    const prev = currentIndex - 1;
-    if (prev >= 0) {
-      setCurrentIndex(prev);
-      setShowAnswer(false);
-    } else {
-      // Loop to last card
-      setCurrentIndex(data.length - 1);
-      setShowAnswer(false);
-    }
-  };
-
-  // Handle flashcard answer (correct/incorrect) with auto-advance
-  const handleFlashcardAnswer = async (isCorrect) => {
-    // Record progress for the current card
-    await recordProgress(currentIndex, isCorrect);
-
-    // Mark this card as completed
-    setCompletedCards((prev) => new Set([...prev, currentIndex]));
-
-    // Auto-advance to next card after a short delay
-    setTimeout(() => {
-      const next = currentIndex + 1;
-      if (next < data.length) {
-        setCurrentIndex(next);
-        setShowAnswer(false);
-      } else {
-        // All cards completed, redirect to dashboard
-        navigate.push(`/DashBoard/${user.id}`);
-      }
-    }, 1000); // 1 second delay to show the answer feedback
-
-    console.log(
-      `Card ${currentIndex + 1}: ${isCorrect ? "Correct" : "Incorrect"}`
-    );
-  };
-
-  // Check if all cards are completed
-  const allCardsCompleted = data && completedCards.size === data.length;
-
   // Don't render anything while checking authentication
   if (authLoading) {
+    console.log("⏳ Auth loading...");
     return (
       <div className="p-8 text-center">
         <Hourglass size="40" bgOpacity="0.1" speed="1.75" color="white" />
@@ -265,6 +279,7 @@ export default function FlashcardPage() {
 
   // Don't render anything if user is not authenticated
   if (!user) {
+    console.log("❌ No user, returning null");
     return null; // Will redirect to login
   }
 
