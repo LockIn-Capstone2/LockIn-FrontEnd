@@ -1,4 +1,4 @@
-"use client"; //used for client side interactivity
+"use client";
 import "./style.module.css";
 import {
   Card,
@@ -13,6 +13,7 @@ import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import React from "react";
 import { Alert } from "@mui/material";
+import { useAuth } from "@/contexts/AuthContext"; // 🔥 ADD THIS IMPORT
 
 function StudyTimer() {
   const [hours, setHours] = useState("");
@@ -24,40 +25,10 @@ function StudyTimer() {
   const [isPaused, setIsPaused] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
   const [timeDuration, setTimeDuration] = useState(0);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
+
+  // 🔥 FIXED: Use AuthContext instead of local auth state
+  const { user, loading: authLoading } = useAuth();
   const timerRef = useRef(null);
-
-  // Check authentication status
-  const checkAuth = async () => {
-    try {
-      const API_BASE =
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
-      const response = await axios.get(`${API_BASE}/auth/me`, {
-        withCredentials: true,
-      });
-
-      if (response.data && response.data.id) {
-        setIsAuthenticated(true);
-        setCurrentUser(response.data);
-        return true;
-      } else {
-        setIsAuthenticated(false);
-        setCurrentUser(null);
-        return false;
-      }
-    } catch (error) {
-      console.error("Authentication check failed:", error);
-      setIsAuthenticated(false);
-      setCurrentUser(null);
-      return false;
-    }
-  };
-
-  // Check auth on component mount
-  useEffect(() => {
-    checkAuth();
-  }, []);
 
   const handleMinutesChange = (event) => {
     const newValue = event.target.value;
@@ -121,7 +92,7 @@ function StudyTimer() {
   };
 
   const sendTimeData = async (totalDuration) => {
-    if (!isAuthenticated) {
+    if (!user) {
       console.error("User not authenticated");
       return;
     }
@@ -175,8 +146,29 @@ function StudyTimer() {
     }
   }, [timeLeft, isActive]);
 
-  // Show authentication message if not logged in
-  if (!isAuthenticated) {
+  // 🔥 FIXED: Show loading while auth is checking
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Card className="flex w-full max-w-sm bg-[#2D3142] border-none h-100">
+          <CardHeader>
+            <CardTitle className="font-[poppins] text-[white] text-center">
+              Study Timer
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-4"></div>
+            <p className="font-[poppins] text-[white] mb-4">
+              Checking authentication...
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // 🔥 FIXED: Show authentication message only when auth is done and no user
+  if (!authLoading && !user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Card className="flex w-full max-w-sm bg-[#2D3142] border-none h-100">
@@ -190,10 +182,10 @@ function StudyTimer() {
               Please log in to use the study timer.
             </p>
             <Button
-              onClick={checkAuth}
+              onClick={() => (window.location.href = "/LogIn")}
               className="bg-[#0D1321] text-[white] hover:bg-green-500 transition-colors duration-300"
             >
-              Retry Authentication
+              Go to Login
             </Button>
           </CardContent>
         </Card>
@@ -212,9 +204,9 @@ function StudyTimer() {
             <CardTitle className="font-[poppins] text-[white] text-center">
               Study Timer
             </CardTitle>
-            {currentUser && (
+            {user && (
               <p className="font-[poppins] text-[white] text-center text-sm">
-                Welcome, {currentUser.username}!
+                Welcome, {user.username}!
               </p>
             )}
           </CardHeader>
