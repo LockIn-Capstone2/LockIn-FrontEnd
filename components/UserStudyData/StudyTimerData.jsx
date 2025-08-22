@@ -77,28 +77,30 @@ import {
 } from "@/components/ui/card";
 
 function StudyTimerData({ data }) {
-  // if (!data || data.length === 0) {
-  //   return (
-  //     <Card className="flex flex-col w-full max-w-3xl mx-auto shadow-lg rounded-2xl flex-container">
-  //       <CardHeader className="pb-2">
-  //         <CardTitle className="text-lg font-semibold">
-  //           ⏰ Study Time Analysis
-  //         </CardTitle>
-  //         <CardDescription className="text-sm text-muted-foreground">
-  //           Time spent studying each day
-  //         </CardDescription>
-  //       </CardHeader>
-  //       <CardContent className="flex-1 flex items-center justify-center py-12">
-  //         <div className="text-center text-muted-foreground">
-  //           <p className="text-sm">No data available</p>
-  //           <p className="text-xs">
-  //             Complete some study sessions to see your activity
-  //           </p>
-  //         </div>
-  //       </CardContent>
-  //     </Card>
-  //   );
-  // }
+  console.log("StudyTimerData received data:", data);
+
+  if (!data || data.length === 0) {
+    return (
+      <Card className="flex flex-col w-full max-w-3xl mx-auto shadow-lg rounded-2xl flex-container">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg font-semibold">
+            ⏰ Study Time Analysis
+          </CardTitle>
+          <CardDescription className="text-sm text-muted-foreground">
+            Time spent studying each day
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex-1 flex items-center justify-center py-12">
+          <div className="text-center text-muted-foreground">
+            <p className="text-sm">No data available</p>
+            <p className="text-xs">
+              Complete some study sessions to see your activity
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const barColor = "hsl(var(--chart-3))";
 
@@ -118,6 +120,20 @@ function StudyTimerData({ data }) {
             <BarChart
               data={data}
               margin={{ top: 20, right: 20, left: 10, bottom: 20 }}
+              onMouseMove={(chartData, index) => {
+                console.log(
+                  "Chart mouse move - chartData:",
+                  chartData,
+                  "index:",
+                  index
+                );
+                if (chartData && chartData.duration !== undefined) {
+                  console.log("Duration at this position:", chartData.duration);
+                }
+                // Also log the data array to see what's available
+                console.log("Full data array:", data);
+                console.log("Data at index:", data[index]);
+              }}
             >
               <CartesianGrid
                 strokeDasharray="3 3"
@@ -128,6 +144,7 @@ function StudyTimerData({ data }) {
                 tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
                 tickLine={false}
                 axisLine={{ stroke: "hsl(var(--border))" }}
+                type="category"
               />
               <YAxis
                 tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
@@ -140,35 +157,17 @@ function StudyTimerData({ data }) {
                   style: { fill: "hsl(var(--muted-foreground))", fontSize: 12 },
                 }}
               />
-              <Tooltip
-                content={({ active, payload, label }) => {
-                  if (active && payload && payload.length) {
-                    return (
-                      <div className="bg-white dark:bg-neutral-900 border border-border rounded-lg shadow-lg p-3">
-                        <p className="font-medium text-foreground mb-1">
-                          {label}
-                        </p>
-                        {payload.map((entry, index) => (
-                          <p
-                            key={index}
-                            className="text-sm"
-                            style={{ color: entry.fill }}
-                          >
-                            {entry.name}: {entry.value} minutes
-                          </p>
-                        ))}
-                      </div>
-                    );
-                  }
-                  return null;
-                }}
-              />
+
               <Bar
                 dataKey="duration"
                 fill={barColor}
                 radius={[6, 6, 0, 0]}
                 name="Study Duration"
                 barSize={40}
+                onMouseOver={(data, index) => {
+                  console.log("Bar mouse over - data:", data, "index:", index);
+                }}
+                data={data}
               />
             </BarChart>
           </ResponsiveContainer>
