@@ -44,6 +44,7 @@ export default function TasksPage({ params }) {
   const [editCalendarOpen, setEditCalendarOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // API configuration
   const API_BASE =
@@ -58,6 +59,36 @@ export default function TasksPage({ params }) {
     },
   });
 
+  // Check authentication status - FIXED VERSION
+  const checkAuth = async () => {
+    try {
+      console.log("🔐 Checking authentication...");
+      const res = await api.get("/auth/me");
+      console.log("Auth response:", res.data);
+
+      // Check if we got user data back
+      if (res.data && res.data.id) {
+        console.log("✅ User authenticated:", res.data);
+        setIsAuthenticated(true);
+        return true;
+      } else {
+        console.log("❌ No user data returned");
+        setIsAuthenticated(false);
+        setError("Please log in to access your tasks.");
+        return false;
+      }
+    } catch (error) {
+      console.error("❌ Authentication check failed:", error);
+      setIsAuthenticated(false);
+      if (error.response?.status === 401) {
+        setError("Please log in to access your tasks.");
+      } else {
+        setError("Authentication failed. Please try logging in again.");
+      }
+      return false;
+    }
+  };
+
   const fetchTasks = async () => {
     try {
       setLoading(true);
@@ -68,12 +99,15 @@ export default function TasksPage({ params }) {
 
       console.log("Tasks fetched successfully:", res.data);
       setTasks(res.data);
+      setIsAuthenticated(true);
     } catch (error) {
       console.error("Error fetching tasks:", error);
-      setError("Failed to fetch tasks. Please try again.");
 
       if (error.response?.status === 401) {
         setError("Please log in to view your tasks.");
+        setIsAuthenticated(false);
+      } else {
+        setError("Failed to fetch tasks. Please try again.");
       }
     } finally {
       setLoading(false);
@@ -82,7 +116,12 @@ export default function TasksPage({ params }) {
 
   useEffect(() => {
     if (userId) {
-      fetchTasks();
+      // First check auth, then fetch tasks
+      checkAuth().then((authenticated) => {
+        if (authenticated) {
+          fetchTasks();
+        }
+      });
     }
   }, [userId]);
 
@@ -98,13 +137,18 @@ export default function TasksPage({ params }) {
       setTasks((prev) => prev.filter((task) => task.id !== taskId));
     } catch (error) {
       console.error("Error deleting task:", error);
-      setError("Failed to delete task. Please try again.");
+      if (error.response?.status === 401) {
+        setError("Please log in to delete tasks.");
+      } else {
+        setError("Failed to delete task. Please try again.");
+      }
     }
   };
 
   const handleAddTask = async () => {
     try {
       setError("");
+      console.log("🚀 Starting task creation...");
 
       // Validate required fields
       if (!newTask.className.trim() || !newTask.assignment.trim()) {
@@ -112,10 +156,20 @@ export default function TasksPage({ params }) {
         return;
       }
 
-      console.log("Adding new task:", newTask);
-      const res = await api.post("/tasks", newTask);
+      // Prepare task data with proper date handling
+      const taskData = {
+        ...newTask,
+        deadline: newTask.deadline
+          ? new Date(newTask.deadline).toISOString().split("T")[0] // Send only the date part
+          : null,
+      };
 
-      console.log("Task added successfully:", res.data);
+      console.log("📝 Original newTask:", newTask);
+      console.log("📤 Processed taskData:", taskData);
+
+      const res = await api.post("/tasks", taskData);
+
+      console.log("✅ Task added successfully:", res.data);
       setTasks((prev) => [res.data, ...prev]);
 
       // Reset form
@@ -128,9 +182,31 @@ export default function TasksPage({ params }) {
         deadline: "",
         priority: "medium",
       });
+
+      console.log("🎉 Task creation completed successfully");
     } catch (error) {
-      console.error("Error adding task:", error);
-      setError("Failed to add task. Please try again.");
+      console.error("❌ Error adding task:", error);
+      console.error("🔍 Error details:", {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message,
+      });
+
+      if (error.response?.status === 401) {
+        setError("Please log in to create tasks.");
+        setIsAuthenticated(false);
+      } else if (error.response?.status === 400) {
+        setError(
+          error.response.data.error ||
+            "Invalid task data. Please check your input."
+        );
+      } else if (error.response?.status === 500) {
+        setError("Server error. Please try again later.");
+      } else if (error.code === "NETWORK_ERROR") {
+        setError("Network error. Please check your connection.");
+      } else {
+        setError(`Failed to add task: ${error.message || "Unknown error"}`);
+      }
     }
   };
 
@@ -149,8 +225,16 @@ export default function TasksPage({ params }) {
         return;
       }
 
-      console.log("Updating task:", editTask.id, editTask);
-      const res = await api.put(`/tasks/${editTask.id}`, editTask);
+      // Prepare task data with proper date handling
+      const taskData = {
+        ...editTask,
+        deadline: editTask.deadline
+          ? new Date(editTask.deadline).toISOString()
+          : null,
+      };
+
+      console.log("Updating task:", editTask.id, taskData);
+      const res = await api.put(`/tasks/${editTask.id}`, taskData);
 
       console.log("Task updated successfully:", res.data);
 
@@ -162,7 +246,18 @@ export default function TasksPage({ params }) {
       setEditTask(null);
     } catch (error) {
       console.error("Error editing task:", error);
-      setError("Failed to update task. Please try again.");
+
+      if (error.response?.status === 401) {
+        setError("Please log in to edit tasks.");
+        setIsAuthenticated(false);
+      } else if (error.response?.status === 400) {
+        setError(
+          error.response.data.error ||
+            "Invalid task data. Please check your input."
+        );
+      } else {
+        setError("Failed to update task. Please try again.");
+      }
     }
   };
 
@@ -181,7 +276,13 @@ export default function TasksPage({ params }) {
       );
     } catch (error) {
       console.error("Error updating status:", error);
-      setError("Failed to update status. Please try again.");
+
+      if (error.response?.status === 401) {
+        setError("Please log in to update task status.");
+        setIsAuthenticated(false);
+      } else {
+        setError("Failed to update status. Please try again.");
+      }
     }
   };
 
@@ -199,6 +300,38 @@ export default function TasksPage({ params }) {
     setFilterStatus("");
     setFilterPriority("");
   };
+
+  // Show authentication required message
+  if (!isAuthenticated && !loading) {
+    return (
+      <div className="task-container">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <h2 className="text-xl font-semibold mb-4">
+              Authentication Required
+            </h2>
+            <p className="text-gray-600 mb-4">
+              Please log in to access your tasks.
+            </p>
+            {error && (
+              <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                {error}
+              </div>
+            )}
+            <button
+              onClick={() => {
+                setError("");
+                checkAuth();
+              }}
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+              Retry Authentication
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (loading && tasks.length === 0) {
     return (
@@ -301,7 +434,7 @@ export default function TasksPage({ params }) {
       </div>
 
       {/* Tasks Table */}
-      {filteredTasks.length === 0 ? (
+      {filteredTasks.length === 0 && !showNewRow ? (
         <div className="text-center py-8 text-gray-500">
           {tasks.length === 0
             ? "No tasks yet. Create your first task!"
@@ -572,9 +705,10 @@ export default function TasksPage({ params }) {
                     <input
                       type="text"
                       value={newTask.className}
-                      onChange={(e) =>
-                        setNewTask({ ...newTask, className: e.target.value })
-                      }
+                      onChange={(e) => {
+                        console.log("Updating className:", e.target.value);
+                        setNewTask({ ...newTask, className: e.target.value });
+                      }}
                       placeholder="Class Name"
                       className="w-full p-2 border rounded"
                     />
@@ -583,9 +717,10 @@ export default function TasksPage({ params }) {
                     <input
                       type="text"
                       value={newTask.assignment}
-                      onChange={(e) =>
-                        setNewTask({ ...newTask, assignment: e.target.value })
-                      }
+                      onChange={(e) => {
+                        console.log("Updating assignment:", e.target.value);
+                        setNewTask({ ...newTask, assignment: e.target.value });
+                      }}
                       placeholder="Assignment"
                       className="w-full p-2 border rounded"
                     />
@@ -594,9 +729,10 @@ export default function TasksPage({ params }) {
                     <input
                       type="text"
                       value={newTask.description}
-                      onChange={(e) =>
-                        setNewTask({ ...newTask, description: e.target.value })
-                      }
+                      onChange={(e) => {
+                        console.log("Updating description:", e.target.value);
+                        setNewTask({ ...newTask, description: e.target.value });
+                      }}
                       placeholder="Description"
                       className="w-full p-2 border rounded"
                     />
@@ -718,7 +854,11 @@ export default function TasksPage({ params }) {
                   </td>
                   <td className="task-actions">
                     <button
-                      onClick={handleAddTask}
+                      onClick={() => {
+                        console.log("Add button clicked!");
+                        console.log("Current newTask state:", newTask);
+                        handleAddTask();
+                      }}
                       className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 mr-2"
                     >
                       Add
@@ -741,7 +881,12 @@ export default function TasksPage({ params }) {
       {!showNewRow && (
         <button
           className="new-task-button mt-6"
-          onClick={() => setShowNewRow(true)}
+          onClick={() => {
+            console.log("🔘 New Task button clicked!");
+            console.log("Current showNewRow state:", showNewRow);
+            setShowNewRow(true);
+            console.log("Set showNewRow to true");
+          }}
         >
           + New Task
         </button>

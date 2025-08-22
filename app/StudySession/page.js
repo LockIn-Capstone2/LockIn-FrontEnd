@@ -13,10 +13,8 @@ import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import React from "react";
 import { Alert } from "@mui/material";
-import { useAuth } from "@/contexts/AuthContext";
 
 function StudyTimer() {
-  const { user } = useAuth();
   const [hours, setHours] = useState("");
   const [minutes, setMinutes] = useState("");
   const [seconds, setSeconds] = useState("");
@@ -26,7 +24,40 @@ function StudyTimer() {
   const [isPaused, setIsPaused] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
   const [timeDuration, setTimeDuration] = useState(0);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
   const timerRef = useRef(null);
+
+  // Check authentication status
+  const checkAuth = async () => {
+    try {
+      const API_BASE =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
+      const response = await axios.get(`${API_BASE}/auth/me`, {
+        withCredentials: true,
+      });
+
+      if (response.data && response.data.id) {
+        setIsAuthenticated(true);
+        setCurrentUser(response.data);
+        return true;
+      } else {
+        setIsAuthenticated(false);
+        setCurrentUser(null);
+        return false;
+      }
+    } catch (error) {
+      console.error("Authentication check failed:", error);
+      setIsAuthenticated(false);
+      setCurrentUser(null);
+      return false;
+    }
+  };
+
+  // Check auth on component mount
+  useEffect(() => {
+    checkAuth();
+  }, []);
 
   const handleMinutesChange = (event) => {
     const newValue = event.target.value;
@@ -90,7 +121,7 @@ function StudyTimer() {
   };
 
   const sendTimeData = async (totalDuration) => {
-    if (!user) {
+    if (!isAuthenticated) {
       console.error("User not authenticated");
       return;
     }
@@ -109,8 +140,9 @@ function StudyTimer() {
           withCredentials: true, // This sends the JWT cookie
         }
       );
+      console.log("Timer data sent successfully:", response.data);
     } catch (error) {
-      console.error("error", error);
+      console.error("Error sending timer data:", error);
     }
   };
 
@@ -143,6 +175,32 @@ function StudyTimer() {
     }
   }, [timeLeft, isActive]);
 
+  // Show authentication message if not logged in
+  if (!isAuthenticated) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Card className="flex w-full max-w-sm bg-[#2D3142] border-none h-100">
+          <CardHeader>
+            <CardTitle className="font-[poppins] text-[white] text-center">
+              Study Timer
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-center">
+            <p className="font-[poppins] text-[white] mb-4">
+              Please log in to use the study timer.
+            </p>
+            <Button
+              onClick={checkAuth}
+              className="bg-[#0D1321] text-[white] hover:bg-green-500 transition-colors duration-300"
+            >
+              Retry Authentication
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="flex font-[poppins] bg-[#2D3142] text-[white] text-center rounded-xl h-8 items-center justify-center font-bold">
@@ -154,6 +212,11 @@ function StudyTimer() {
             <CardTitle className="font-[poppins] text-[white] text-center">
               Study Timer
             </CardTitle>
+            {currentUser && (
+              <p className="font-[poppins] text-[white] text-center text-sm">
+                Welcome, {currentUser.username}!
+              </p>
+            )}
           </CardHeader>
           <CardContent className=" flex w-40 h-40 rounded-full aspect-square items-center justify-center ring-4 mx-auto ring-[#EEC0C8] ">
             <div className="items-center justify-center font-[poppins] text-[white]">

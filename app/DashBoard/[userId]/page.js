@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter, usePathname, useParams } from "next/navigation";
 import {
@@ -31,6 +31,7 @@ import { WeeklyActivityBarChart } from "@/components/UserBarChart/BarChart";
 import { StreakProgressRadialChart } from "@/components/UserRadialChart/RadialChart";
 import ThemeToggleButton from "@/components/ui/theme-toggle-button";
 import { useAuth } from "@/contexts/AuthContext";
+import StudyTimerData from "@/components/UserStudyData/StudyTimerData";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
 
@@ -434,6 +435,72 @@ export default function Dashboard() {
     }
   };
 
+  const [studyData, setStudyData] = useState([]);
+
+  const getData = useCallback(async () => {
+    try {
+      const response = await fetch(`${API_BASE}/data`, {
+        credentials: "include",
+      });
+      const result = await response.json();
+      setStudyData(result);
+      console.log("data:", result);
+    } catch (error) {
+      console.error("error:", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    getData();
+  }, [getData]);
+
+  function durationToMinutes(durationStr) {
+    if (!durationStr || typeof durationStr !== "string") {
+      console.warn("Invalid duration string:", durationStr);
+      return 0;
+    }
+
+    const parts = durationStr.split(":");
+    if (parts.length !== 3) {
+      console.warn(
+        "Invalid duration format, expected HH:MM:SS, got:",
+        durationStr
+      );
+      return 0;
+    }
+
+    const [hours, minutes, seconds] = parts.map(Number);
+
+    // Validate that all parts are numbers
+    if (isNaN(hours) || isNaN(minutes) || isNaN(seconds)) {
+      console.warn("Invalid duration values:", { hours, minutes, seconds });
+      return 0;
+    }
+
+    const totalMinutes = hours * 60 + minutes + seconds / 60;
+    console.log(
+      `Converting duration "${durationStr}" to ${totalMinutes} minutes`
+    );
+    return totalMinutes;
+  }
+
+  const data =
+    studyData && Array.isArray(studyData)
+      ? studyData.map((item) => {
+          const durationInMinutes = durationToMinutes(item.duration);
+          console.log(
+            `Item ${item.id}: Original duration: ${item.duration}, Converted to: ${durationInMinutes} minutes`
+          );
+          return {
+            ...item,
+            formattedDate: item.formattedDate,
+            duration: durationInMinutes,
+          };
+        })
+      : [];
+
+  console.log("Final data array:", data);
+
   // Don't render anything while checking authentication
   if (authLoading) {
     return (
@@ -777,6 +844,25 @@ export default function Dashboard() {
                 </div>
               </div>
             )}
+
+            {/* Study Session*/}
+
+            <div className="bg-card rounded-lg border border-border p-6 hover:shadow-lg transition-all duration-300 group">
+              <div className="mb-4">
+                <h3 className="flex items-center space-x-2 text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
+                  <IconClock className="w-5 h-5" />
+                  <span>Study Time Analysis</span>
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Time spent studying each day
+                </p>
+              </div>
+              {isNonEmptyArray(data) ? (
+                <StudyTimerData data={data} />
+              ) : (
+                <EmptyChart />
+              )}
+            </div>
 
             {/* Performance */}
             {activeTab === "performance" && (
