@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState, use } from "react";
+import { useRouter } from "next/navigation";
 import { Calendar } from "@/components/ui/calender";
 import {
   Popover,
@@ -21,6 +22,7 @@ import "../tasks.css";
 export default function TasksPage({ params }) {
   // Unwrap params using React.use() for Next.js compatibility
   const { userId } = use(params);
+  const router = useRouter();
 
   const [tasks, setTasks] = useState([]);
   const [showNewRow, setShowNewRow] = useState(false);
@@ -45,6 +47,7 @@ export default function TasksPage({ params }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState(null);
 
   // API configuration
   const API_BASE =
@@ -63,23 +66,26 @@ export default function TasksPage({ params }) {
   const checkAuth = async () => {
     try {
       console.log("🔐 Checking authentication...");
-      const res = await api.get("/auth/me");
+      const res = await api.get(`${API_BASE}/auth/me`);
       console.log("Auth response:", res.data);
 
       // Check if we got user data back
       if (res.data && res.data.id) {
         console.log("✅ User authenticated:", res.data);
         setIsAuthenticated(true);
+        setUser(res.data); // Set user data for dashboard navigation
         return true;
       } else {
         console.log("❌ No user data returned");
         setIsAuthenticated(false);
+        setUser(null);
         setError("Please log in to access your tasks.");
         return false;
       }
     } catch (error) {
       console.error("❌ Authentication check failed:", error);
       setIsAuthenticated(false);
+      setUser(null);
       if (error.response?.status === 401) {
         setError("Please log in to access your tasks.");
       } else {
@@ -100,6 +106,11 @@ export default function TasksPage({ params }) {
       console.log("Tasks fetched successfully:", res.data);
       setTasks(res.data);
       setIsAuthenticated(true);
+
+      // Also set user data here if available from the response
+      if (res.data && res.data.length > 0 && res.data[0].userId) {
+        setUser({ id: res.data[0].userId });
+      }
     } catch (error) {
       console.error("Error fetching tasks:", error);
 
@@ -349,8 +360,35 @@ export default function TasksPage({ params }) {
   return (
     <div className="task-container">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Your Tasks</h1>
-        <div className="text-sm text-gray-600">User ID: {userId}</div>
+        <div className="flex items-center gap-4">
+          <h1 className="text-2xl font-bold">Your Tasks</h1>
+          <div className="text-sm text-gray-600">User ID: {userId}</div>
+        </div>
+        <div className="flex items-center gap-4">
+          {user && (
+            <Button
+              variant="outline"
+              onClick={() => router.push(`/DashBoard/${user.id}`)}
+              className="flex items-center gap-2"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                />
+              </svg>
+              Back to Dashboard
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Error Display */}
